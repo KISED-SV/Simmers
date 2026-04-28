@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Simmers — AI Tools (Live)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --flame:#D85A30; --amber:#EF9F27; --peach:#F0997B; --cream:#FAECE7;
+  --dark:#1A1108; --mid:#5C3A1E; --muted:#A07850;
+  --border:rgba(26,17,8,0.08); --white:#FDFAF7; --surface:#F7F3EE;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--surface);color:var(--dark);font-family:'DM Sans',sans-serif;min-height:100vh;}
+.layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;max-width:1100px;margin:0 auto;}
+.sidebar{padding:28px 20px;border-right:1px solid var(--border);position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px;background:var(--white);}
+.logo{font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--dark);margin-bottom:28px;padding:0 8px;}
+.logo span{color:var(--flame);}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;font-size:14px;color:var(--muted);cursor:pointer;transition:background .15s,color .15s;text-decoration:none;}
+.nav-item:hover{background:var(--cream);color:var(--dark);}
+.nav-item.active{background:var(--cream);color:var(--flame);font-weight:500;}
+.post-btn{margin-top:auto;background:var(--flame);color:var(--white);border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;}
+.post-btn:hover{background:var(--mid);}
+.main{padding:36px 40px;max-width:800px;}
+.page-title{font-family:'Fraunces',serif;font-size:28px;font-weight:600;color:var(--dark);margin-bottom:6px;}
+.page-sub{font-size:14px;color:var(--muted);margin-bottom:32px;}
+.live-badge{display:inline-flex;align-items:center;gap:6px;background:#EAF3DE;border:1px solid #C0DD97;border-radius:100px;padding:4px 12px;font-size:11px;font-weight:500;color:#3B6D11;margin-bottom:20px;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:#3B6D11;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+.yt-panel{background:var(--white);border:1px solid var(--border);border-radius:20px;overflow:hidden;}
+.panel-header{padding:24px 28px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;}
+.panel-icon{width:44px;height:44px;border-radius:12px;background:var(--cream);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.panel-title{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:var(--dark);}
+.panel-desc{font-size:13px;color:var(--muted);margin-top:2px;}
+.panel-body{padding:28px;}
+
+.input-label{font-size:12px;font-weight:500;color:var(--muted);margin-bottom:8px;letter-spacing:.04em;text-transform:uppercase;}
+.url-row{display:flex;gap:10px;margin-bottom:8px;}
+.url-input{flex:1;padding:12px 16px;border:1.5px solid var(--border);border-radius:12px;font-size:14px;color:var(--dark);background:var(--surface);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;}
+.url-input:focus{border-color:var(--flame);background:var(--white);}
+.extract-btn{padding:12px 24px;background:var(--flame);color:var(--white);border:none;border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;transition:background .2s;}
+.extract-btn:hover{background:var(--mid);}
+.extract-btn:disabled{background:var(--muted);cursor:not-allowed;}
+.hint{font-size:12px;color:var(--muted);margin-bottom:24px;line-height:1.6;}
+
+.progress-box{display:none;background:var(--surface);border-radius:14px;padding:20px;margin-bottom:20px;}
+.progress-steps{display:flex;flex-direction:column;gap:10px;}
+.progress-step{display:flex;align-items:center;gap:12px;font-size:13px;color:var(--muted);}
+.step-dot{width:22px;height:22px;border-radius:50%;background:var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:background .3s;}
+.step-dot.done{background:var(--flame);color:var(--white);}
+.step-dot.active{background:var(--amber);color:var(--white);animation:pulse 1s infinite;}
+
+.error-box{display:none;background:#FCEBEB;border:1px solid #F7C1C1;border-radius:12px;padding:14px 18px;font-size:13px;color:#A32D2D;line-height:1.6;margin-bottom:16px;}
+
+.result-box{display:none;border:1.5px solid rgba(216,90,48,0.2);border-radius:16px;overflow:hidden;}
+.result-header{background:var(--cream);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.result-title{font-family:'Fraunces',serif;font-size:16px;font-weight:600;color:var(--dark);}
+.result-badges{display:flex;gap:6px;flex-wrap:wrap;}
+.rbadge{font-size:10px;padding:3px 10px;border-radius:100px;background:var(--white);color:var(--mid);font-weight:500;}
+.rbadge.flame{background:var(--flame);color:var(--white);}
+.result-body{padding:20px;}
+.section-label{font-size:11px;font-weight:500;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-bottom:10px;}
+.ingredients-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:20px;}
+.ingredient-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--dark);padding:7px 10px;background:var(--surface);border-radius:8px;}
+.ingr-dot{width:6px;height:6px;border-radius:50%;background:var(--flame);flex-shrink:0;}
+.steps-list{display:flex;flex-direction:column;gap:10px;margin-bottom:20px;}
+.step-item{display:flex;gap:12px;font-size:13px;color:var(--dark);line-height:1.6;}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--flame);color:var(--white);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:500;flex-shrink:0;margin-top:1px;}
+.result-actions{display:flex;gap:10px;}
+.res-btn{flex:1;padding:11px;border-radius:12px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.res-btn-primary{background:var(--flame);color:var(--white);border:none;}
+.res-btn-primary:hover{background:var(--mid);}
+.res-btn-secondary{background:transparent;color:var(--dark);border:1px solid var(--border);}
+.res-btn-secondary:hover{background:var(--surface);}
+.raw-toggle{font-size:12px;color:var(--flame);cursor:pointer;text-align:center;margin-top:12px;padding:8px;}
+.raw-toggle:hover{text-decoration:underline;}
+.raw-box{display:none;background:var(--surface);border-radius:10px;padding:14px;font-size:12px;color:var(--muted);line-height:1.7;margin-top:8px;white-space:pre-wrap;word-break:break-word;}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr;}.sidebar{display:none;}.main{padding:20px;}.ingredients-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo">Simmer<span>s</span></div>
+    <a class="nav-item" href="simmers-feed.html">⊞ &nbsp;Feed</a>
+    <a class="nav-item active" href="simmers-ai-tools-LIVE.html">✦ &nbsp;AI Tools</a>
+    <a class="nav-item" href="simmers-explore.html">🔍 &nbsp;Explore</a>
+    <a class="nav-item" href="simmers-saved.html">🔖 &nbsp;Saved</a>
+    <a class="nav-item" href="simmers-profile.html">○ &nbsp;Profile</a>
+    <button class="post-btn">+ Post a Recipe</button>
+  </aside>
+
+  <main class="main">
+    <div class="live-badge"><span class="live-dot"></span> Live — powered by AI</div>
+    <div class="page-title">AI Tools</div>
+    <div class="page-sub">Link your own YouTube cooking video and let AI extract the recipe instantly.</div>
+
+    <div class="yt-panel">
+      <div class="panel-header">
+        <div class="panel-icon">▶</div>
+        <div>
+          <div class="panel-title">YouTube → Recipe</div>
+          <div class="panel-desc">Your video URL → clean structured recipe in seconds.</div>
+        </div>
+      </div>
+      <div class="panel-body">
+        <div class="input-label">Your YouTube video URL</div>
+        <div class="url-row">
+          <input class="url-input" id="yt-input" placeholder="https://youtube.com/watch?v=..." />
+          <button class="extract-btn" id="extract-btn" onclick="startExtract()">Extract Recipe</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+          <div style="display:flex;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:3px;gap:3px;">
+            <button id="btn-mock" onclick="setMode('mock')" style="padding:6px 14px;border-radius:7px;border:none;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;background:var(--flame);color:var(--white);">Mock (free)</button>
+            <button id="btn-live" onclick="setMode('live')" style="padding:6px 14px;border-radius:7px;border:none;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;background:transparent;color:var(--muted);">Live (uses credits)</button>
+          </div>
+          <span id="mode-hint" style="font-size:11px;color:var(--muted);">Mock mode — no credits used</span>
+        </div>
+
+        <div class="progress-box" id="progress-box">
+          <div class="progress-steps">
+            <div class="progress-step"><div class="step-dot" id="dot-1">1</div><span id="label-1">Fetching video info...</span></div>
+            <div class="progress-step"><div class="step-dot" id="dot-2">2</div><span id="label-2">Reading captions...</span></div>
+            <div class="progress-step"><div class="step-dot" id="dot-3">3</div><span id="label-3">Extracting recipe with AI...</span></div>
+            <div class="progress-step"><div class="step-dot" id="dot-4">4</div><span id="label-4">Formatting recipe card...</span></div>
+          </div>
+        </div>
+
+        <div class="error-box" id="error-box"></div>
+
+        <div class="result-box" id="result-box">
+          <div class="result-header">
+            <div class="result-title" id="result-title">Recipe</div>
+            <div class="result-badges">
+              <span class="rbadge" id="badge-time"></span>
+              <span class="rbadge" id="badge-diff"></span>
+              <span class="rbadge" id="badge-serv"></span>
+              <span class="rbadge flame">AI Extracted</span>
+            </div>
+          </div>
+          <div class="result-body">
+            <div class="section-label">Ingredients</div>
+            <div class="ingredients-grid" id="ingredients-grid"></div>
+            <div class="section-label">Steps</div>
+            <div class="steps-list" id="steps-list"></div>
+            <div class="result-actions">
+              <button class="res-btn res-btn-primary" onclick="alert('Coming soon! Database connection needed.')">Post this recipe</button>
+              <button class="res-btn res-btn-secondary" onclick="copyRecipe()">Copy text</button>
+            </div>
+            <div class="raw-toggle" onclick="toggleRaw()">Show raw AI response ▾</div>
+            <div class="raw-box" id="raw-box"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// CONFIG: replace YOUR_YOUTUBE_KEY below with your actual YouTube API key
+const YOUTUBE_KEY = 'YOUR_YOUTUBE_KEY';
+let isMock = true;
+
+function setMode(mode) {
+  isMock = mode === 'mock';
+  document.getElementById('btn-mock').style.background = isMock ? 'var(--flame)' : 'transparent';
+  document.getElementById('btn-mock').style.color = isMock ? 'var(--white)' : 'var(--muted)';
+  document.getElementById('btn-live').style.background = !isMock ? 'var(--flame)' : 'transparent';
+  document.getElementById('btn-live').style.color = !isMock ? 'var(--white)' : 'var(--muted)';
+  document.getElementById('mode-hint').textContent = isMock ? 'Mock mode — no credits used' : 'Live mode — uses Anthropic credits';
+}
+
+function extractVideoId(url) {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/,
+    /youtube\.com\/shorts\/([^&\n?#]+)/
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+function setDot(n, state) {
+  const dot = document.getElementById('dot-' + n);
+  dot.className = 'step-dot ' + state;
+  if (state === 'done') dot.textContent = '✓';
+}
+
+function showError(msg) {
+  const box = document.getElementById('error-box');
+  box.textContent = msg;
+  box.style.display = 'block';
+  document.getElementById('progress-box').style.display = 'none';
+  document.getElementById('extract-btn').disabled = false;
+}
+
+async function startExtract() {
+  const url = document.getElementById('yt-input').value.trim();
+  if (!url) return;
+
+  const videoId = extractVideoId(url);
+  if (!videoId) {
+    showError('올바른 YouTube URL을 입력해주세요. (예: https://youtube.com/watch?v=xxxxx)');
+    return;
+  }
+
+  if (YOUTUBE_KEY === 'YOUR_YOUTUBE_KEY') {
+    showError('YouTube API 키를 설정해주세요!');
+    return;
+  }
+
+  document.getElementById('extract-btn').disabled = true;
+  document.getElementById('error-box').style.display = 'none';
+  document.getElementById('result-box').style.display = 'none';
+
+  const pb = document.getElementById('progress-box');
+  pb.style.display = 'block';
+  [1,2,3,4].forEach(n => { setDot(n, ''); document.getElementById('dot-'+n).textContent = n; });
+
+  try {
+    // STEP 1: Fetch video info
+    setDot(1, 'active');
+    const ytRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/videos?part=snippet,contentDetails&id=${videoId}&key=${YOUTUBE_KEY}`
+    );
+    const ytData = await ytRes.json();
+
+    if (!ytData.items || ytData.items.length === 0) {
+      showError('영상을 찾을 수 없어요. URL을 확인해주세요.');
+      return;
+    }
+
+    const snippet = ytData.items[0].snippet;
+    const videoTitle = snippet.title;
+    const videoDesc = snippet.description;
+    setDot(1, 'done');
+
+    // STEP 2: Read captions (use title + description as context)
+    setDot(2, 'active');
+    await new Promise(r => setTimeout(r, 600));
+
+    // Try to fetch captions list
+    const capRes = await fetch(
+      `https://www.googleapis.com/youtube/v3/captions?part=snippet&videoId=${videoId}&key=${YOUTUBE_KEY}`
+    );
+    const capData = await capRes.json();
+    const hasCaptions = capData.items && capData.items.length > 0;
+    setDot(2, 'done');
+
+    // STEP 3: Extract recipe with Anthropic AI
+    setDot(3, 'active');
+
+    const prompt = `You are a recipe extraction AI for a cooking platform called Simmers.
+
+Given this YouTube cooking video information, extract a complete recipe.
+
+Video title: ${videoTitle}
+Video description: ${videoDesc.slice(0, 3000)}
+
+Please extract and return a recipe in this EXACT JSON format (no markdown, no extra text, just the JSON):
+{
+  "name": "Recipe name",
+  "time": "X min",
+  "difficulty": "Easy/Medium/Hard",
+  "servings": "X servings",
+  "ingredients": ["amount unit ingredient", "amount unit ingredient"],
+  "steps": ["Step description", "Step description"]
+}
+
+If you cannot find enough recipe information, still return your best guess based on the title and description. Return ONLY the JSON object.`;
+
+    const aiRes = await fetch('/.netlify/functions/extract-recipe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ prompt, mock: isMock })
+    });
+
+    const aiData = await aiRes.json();
+
+    if (aiData.error) {
+      showError('AI 오류: ' + aiData.error.message);
+      return;
+    }
+
+    const rawText = aiData.content[0].text;
+    setDot(3, 'done');
+
+    // STEP 4: Format recipe card
+    setDot(4, 'active');
+    await new Promise(r => setTimeout(r, 400));
+
+    let recipe;
+    try {
+      const cleaned = rawText.replace(/```json|```/g, '').trim();
+      recipe = JSON.parse(cleaned);
+    } catch(e) {
+      showError('레시피 파싱에 실패했어요. AI 응답을 확인해주세요.\n\n' + rawText);
+      return;
+    }
+
+    setDot(4, 'done');
+    pb.style.display = 'none';
+
+    // Render result
+    document.getElementById('result-title').textContent = recipe.name || videoTitle;
+    document.getElementById('badge-time').textContent = recipe.time || '';
+    document.getElementById('badge-diff').textContent = recipe.difficulty || '';
+    document.getElementById('badge-serv').textContent = recipe.servings || '';
+
+    const ig = document.getElementById('ingredients-grid');
+    ig.innerHTML = (recipe.ingredients || []).map(i =>
+      `<div class="ingredient-item"><div class="ingr-dot"></div>${i}</div>`
+    ).join('');
+
+    const sl = document.getElementById('steps-list');
+    sl.innerHTML = (recipe.steps || []).map((s, i) =>
+      `<div class="step-item"><div class="step-num">${i+1}</div><div>${s}</div></div>`
+    ).join('');
+
+    document.getElementById('raw-box').textContent = rawText;
+    document.getElementById('result-box').style.display = 'block';
+    document.getElementById('result-box').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  } catch(err) {
+    console.error('Extract error:', err);
+    showError('오류: ' + err.message + '\n\n브라우저 콘솔(F12)에서 자세한 오류를 확인하세요.');
+  } finally {
+    document.getElementById('extract-btn').disabled = false;
+  }
+}
+
+function toggleRaw() {
+  const box = document.getElementById('raw-box');
+  const toggle = document.querySelector('.raw-toggle');
+  const isOpen = box.style.display === 'block';
+  box.style.display = isOpen ? 'none' : 'block';
+  toggle.textContent = isOpen ? 'Show raw AI response ▾' : 'Hide raw AI response ▴';
+}
+
+function copyRecipe() {
+  const title = document.getElementById('result-title').textContent;
+  const ingredients = [...document.querySelectorAll('.ingredient-item')].map(el => '- ' + el.textContent.trim()).join('\n');
+  const steps = [...document.querySelectorAll('.step-item')].map((el, i) => `${i+1}. ` + el.querySelector('div:last-child').textContent.trim()).join('\n');
+  const text = `${title}\n\nIngredients:\n${ingredients}\n\nSteps:\n${steps}`;
+  navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard!'));
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Simmers — AI Tools</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --flame: #D85A30;
+  --amber: #EF9F27;
+  --peach: #F0997B;
+  --cream: #FAECE7;
+  --dark: #1A1108;
+  --mid: #5C3A1E;
+  --muted: #A07850;
+  --border: rgba(26,17,8,0.08);
+  --white: #FDFAF7;
+  --surface: #F7F3EE;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--surface); color: var(--dark); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
+
+.layout { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; max-width: 1100px; margin: 0 auto; }
+
+/* SIDEBAR */
+.sidebar {
+  padding: 28px 20px;
+  border-right: 1px solid var(--border);
+  position: sticky; top: 0; height: 100vh;
+  display: flex; flex-direction: column; gap: 6px;
+  background: var(--white);
+}
+.logo { font-family: 'Fraunces', serif; font-size: 22px; font-weight: 700; color: var(--dark); margin-bottom: 28px; padding: 0 8px; }
+.logo span { color: var(--flame); }
+.nav-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 12px; font-size: 14px; color: var(--muted); cursor: pointer; transition: background 0.15s, color 0.15s; text-decoration: none; }
+.nav-item:hover { background: var(--cream); color: var(--dark); }
+.nav-item.active { background: var(--cream); color: var(--flame); font-weight: 500; }
+.nav-icon { font-size: 18px; width: 22px; text-align: center; }
+.post-btn { margin-top: auto; background: var(--flame); color: var(--white); border: none; border-radius: 12px; padding: 13px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.2s; }
+.post-btn:hover { background: var(--mid); }
+
+/* MAIN */
+.main { padding: 36px 40px; max-width: 800px; }
+.page-title { font-family: 'Fraunces', serif; font-size: 28px; font-weight: 600; color: var(--dark); margin-bottom: 6px; }
+.page-sub { font-size: 14px; color: var(--muted); margin-bottom: 32px; }
+
+/* TOOL TABS */
+.tool-tabs { display: flex; gap: 0; margin-bottom: 28px; background: var(--white); border: 1px solid var(--border); border-radius: 14px; padding: 4px; width: fit-content; }
+.tool-tab { padding: 9px 20px; border-radius: 10px; font-size: 13px; font-weight: 500; color: var(--muted); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
+.tool-tab.active { background: var(--flame); color: var(--white); }
+
+/* PANELS */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* YOUTUBE PANEL */
+.yt-panel { background: var(--white); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; }
+.yt-panel-header { padding: 24px 28px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; }
+.yt-icon { width: 44px; height: 44px; border-radius: 12px; background: var(--cream); display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.yt-panel-title { font-family: 'Fraunces', serif; font-size: 18px; font-weight: 600; color: var(--dark); }
+.yt-panel-desc { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+.yt-body { padding: 28px; }
+.input-label { font-size: 12px; font-weight: 500; color: var(--muted); margin-bottom: 8px; letter-spacing: 0.04em; }
+.url-row { display: flex; gap: 10px; margin-bottom: 20px; }
+.url-input { flex: 1; padding: 12px 16px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 14px; color: var(--dark); background: var(--surface); font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.2s; }
+.url-input:focus { border-color: var(--flame); background: var(--white); }
+.extract-btn { padding: 12px 24px; background: var(--flame); color: var(--white); border: none; border-radius: 12px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; white-space: nowrap; transition: background 0.2s; }
+.extract-btn:hover { background: var(--mid); }
+.extract-btn:disabled { background: var(--muted); cursor: not-allowed; }
+
+.sample-links { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 28px; }
+.sample-chip { font-size: 11px; padding: 5px 12px; border-radius: 100px; background: var(--surface); border: 1px solid var(--border); color: var(--mid); cursor: pointer; transition: all 0.15s; }
+.sample-chip:hover { background: var(--cream); border-color: var(--peach); color: var(--flame); }
+
+/* PROGRESS */
+.progress-box { display: none; background: var(--surface); border-radius: 14px; padding: 20px; margin-bottom: 20px; }
+.progress-steps { display: flex; flex-direction: column; gap: 10px; }
+.progress-step { display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--muted); }
+.step-dot { width: 22px; height: 22px; border-radius: 50%; background: var(--border); display: flex; align-items: center; justify-content: center; font-size: 10px; flex-shrink: 0; transition: background 0.3s; }
+.step-dot.done { background: var(--flame); color: var(--white); }
+.step-dot.active { background: var(--amber); color: var(--white); animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+/* RESULT */
+.result-box { display: none; border: 1.5px solid rgba(216,90,48,0.2); border-radius: 16px; overflow: hidden; }
+.result-header { background: var(--cream); padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; }
+.result-title { font-family: 'Fraunces', serif; font-size: 16px; font-weight: 600; color: var(--dark); }
+.result-badges { display: flex; gap: 6px; }
+.rbadge { font-size: 10px; padding: 3px 10px; border-radius: 100px; background: var(--white); color: var(--mid); font-weight: 500; }
+.rbadge.flame { background: var(--flame); color: var(--white); }
+.result-body { padding: 20px; }
+.ingredients-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 20px; }
+.ingredient-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--dark); padding: 7px 10px; background: var(--surface); border-radius: 8px; }
+.ingr-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--flame); flex-shrink: 0; }
+.steps-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+.step-item { display: flex; gap: 12px; font-size: 13px; color: var(--dark); line-height: 1.6; }
+.step-num { width: 24px; height: 24px; border-radius: 50%; background: var(--flame); color: var(--white); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; flex-shrink: 0; margin-top: 1px; }
+.result-actions { display: flex; gap: 10px; }
+.res-btn { flex: 1; padding: 11px; border-radius: 12px; font-size: 13px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: all 0.15s; }
+.res-btn-primary { background: var(--flame); color: var(--white); border: none; }
+.res-btn-primary:hover { background: var(--mid); }
+.res-btn-secondary { background: transparent; color: var(--dark); border: 1px solid var(--border); }
+.res-btn-secondary:hover { background: var(--surface); }
+
+/* VIDEO PANEL */
+.vid-panel { background: var(--white); border: 1px solid var(--border); border-radius: 20px; overflow: hidden; }
+.vid-panel-header { padding: 24px 28px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; background: linear-gradient(135deg, var(--cream) 0%, var(--white) 100%); }
+.vid-body { padding: 28px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+.vid-form { display: flex; flex-direction: column; gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-input { padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 13px; color: var(--dark); background: var(--surface); font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.2s; }
+.form-input:focus { border-color: var(--flame); background: var(--white); }
+.form-textarea { padding: 11px 14px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 13px; color: var(--dark); background: var(--surface); font-family: 'DM Sans', sans-serif; outline: none; resize: none; height: 120px; transition: border-color 0.2s; line-height: 1.6; }
+.form-textarea:focus { border-color: var(--flame); background: var(--white); }
+.style-row { display: flex; gap: 6px; flex-wrap: wrap; }
+.style-chip { font-size: 11px; padding: 5px 12px; border-radius: 100px; border: 1px solid var(--border); color: var(--muted); cursor: pointer; transition: all 0.15s; background: var(--surface); }
+.style-chip:hover, .style-chip.selected { background: var(--cream); border-color: var(--peach); color: var(--flame); }
+.gen-btn { padding: 13px; background: var(--flame); color: var(--white); border: none; border-radius: 12px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: background 0.2s; }
+.gen-btn:hover { background: var(--mid); }
+
+.vid-preview { display: flex; flex-direction: column; gap: 12px; }
+.video-placeholder { aspect-ratio: 9/16; border-radius: 16px; background: var(--surface); border: 1.5px dashed rgba(216,90,48,0.25); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--muted); font-size: 13px; text-align: center; padding: 20px; transition: all 0.3s; }
+.video-placeholder.generating { border-style: solid; border-color: var(--flame); background: var(--cream); }
+.video-placeholder.done { border-style: solid; border-color: var(--flame); background: linear-gradient(135deg, #F0997B22, #EF9F2722); }
+.vid-icon { font-size: 36px; }
+.vid-progress-label { font-size: 12px; color: var(--flame); font-weight: 500; }
+
+.vid-meta { background: var(--surface); border-radius: 12px; padding: 14px; font-size: 12px; color: var(--muted); line-height: 1.7; }
+
+@media (max-width: 900px) { .layout { grid-template-columns: 1fr; } .sidebar { display: none; } .main { padding: 20px; } .vid-body { grid-template-columns: 1fr; } .ingredients-grid { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo">Simmer<span>s</span></div>
+    <a class="nav-item" href="#">⊞ &nbsp;Feed</a>
+    <a class="nav-item active" href="#">✦ &nbsp;AI Tools</a>
+    <a class="nav-item" href="#">🔍 &nbsp;Explore</a>
+    <a class="nav-item" href="#">🔖 &nbsp;Saved</a>
+    <a class="nav-item" href="#">○ &nbsp;Profile</a>
+    <button class="post-btn">+ Post a Recipe</button>
+  </aside>
+
+  <main class="main">
+    <div class="page-title">AI Tools</div>
+    <div class="page-sub">Let AI do the heavy lifting — extract recipes from videos or generate videos from recipes.</div>
+
+    <div class="tool-tabs">
+      <div class="tool-tab active" onclick="switchTool('yt', this)">▶ YouTube → Recipe</div>
+      <div class="tool-tab" onclick="switchTool('vid', this)">✦ Recipe → Video</div>
+    </div>
+
+    <!-- YOUTUBE PANEL -->
+    <div class="panel active" id="panel-yt">
+      <div class="yt-panel">
+        <div class="yt-panel-header">
+          <div class="yt-icon">▶</div>
+          <div>
+            <div class="yt-panel-title">YouTube → Recipe</div>
+            <div class="yt-panel-desc">Paste any cooking video URL and we'll extract a clean, structured recipe in seconds.</div>
+          </div>
+        </div>
+        <div class="yt-body">
+          <div class="input-label">YouTube URL</div>
+          <div class="url-row">
+            <input class="url-input" id="yt-input" placeholder="https://youtube.com/watch?v=..." />
+            <button class="extract-btn" id="extract-btn" onclick="startExtract()">Extract Recipe</button>
+          </div>
+          <div class="input-label">Try a sample</div>
+          <div class="sample-links">
+            <span class="sample-chip" onclick="fillSample('garlic butter pasta')">🍜 Garlic butter pasta</span>
+            <span class="sample-chip" onclick="fillSample('kimchi fried rice')">🍚 Kimchi fried rice</span>
+            <span class="sample-chip" onclick="fillSample('chocolate lava cake')">🍫 Chocolate lava cake</span>
+            <span class="sample-chip" onclick="fillSample('avocado toast')">🥑 Avocado toast</span>
+          </div>
+
+          <!-- PROGRESS -->
+          <div class="progress-box" id="progress-box">
+            <div class="progress-steps">
+              <div class="progress-step" id="pstep-1">
+                <div class="step-dot active" id="dot-1">1</div>
+                <span>Fetching video metadata...</span>
+              </div>
+              <div class="progress-step" id="pstep-2">
+                <div class="step-dot" id="dot-2">2</div>
+                <span>Reading captions & audio...</span>
+              </div>
+              <div class="progress-step" id="pstep-3">
+                <div class="step-dot" id="dot-3">3</div>
+                <span>Extracting ingredients & steps...</span>
+              </div>
+              <div class="progress-step" id="pstep-4">
+                <div class="step-dot" id="dot-4">4</div>
+                <span>Formatting recipe card...</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- RESULT -->
+          <div class="result-box" id="result-box">
+            <div class="result-header">
+              <div class="result-title" id="result-name">Garlic Butter Pasta</div>
+              <div class="result-badges">
+                <span class="rbadge">15 min</span>
+                <span class="rbadge">Easy</span>
+                <span class="rbadge">2 servings</span>
+                <span class="rbadge flame">AI Extracted</span>
+              </div>
+            </div>
+            <div class="result-body">
+              <div class="input-label" style="margin-bottom:10px;">Ingredients</div>
+              <div class="ingredients-grid" id="ingredients-grid"></div>
+              <div class="input-label" style="margin: 16px 0 10px;">Steps</div>
+              <div class="steps-list" id="steps-list"></div>
+              <div class="result-actions">
+                <button class="res-btn res-btn-primary">Post this recipe</button>
+                <button class="res-btn res-btn-secondary">Edit first</button>
+                <button class="res-btn res-btn-secondary">Generate video</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- VIDEO PANEL -->
+    <div class="panel" id="panel-vid">
+      <div class="vid-panel">
+        <div class="vid-panel-header">
+          <div class="yt-icon" style="background:linear-gradient(135deg,var(--flame),var(--amber));color:var(--white);">✦</div>
+          <div>
+            <div class="yt-panel-title">Recipe → Video</div>
+            <div class="yt-panel-desc">Type your recipe and let AI generate a short cooking video — no camera needed.</div>
+          </div>
+        </div>
+        <div class="vid-body">
+          <div class="vid-form">
+            <div class="form-group">
+              <div class="input-label">Recipe name</div>
+              <input class="form-input" id="vid-title" placeholder="e.g. Crispy Garlic Shrimp" />
+            </div>
+            <div class="form-group">
+              <div class="input-label">Ingredients & steps</div>
+              <textarea class="form-textarea" id="vid-recipe" placeholder="Ingredients:&#10;- 200g shrimp&#10;- 4 garlic cloves&#10;&#10;Steps:&#10;1. Heat oil in pan..."></textarea>
+            </div>
+            <div class="form-group">
+              <div class="input-label">Video style</div>
+              <div class="style-row">
+                <span class="style-chip selected" onclick="selectStyle(this)">Quick cuts</span>
+                <span class="style-chip" onclick="selectStyle(this)">Step-by-step</span>
+                <span class="style-chip" onclick="selectStyle(this)">Cinematic</span>
+                <span class="style-chip" onclick="selectStyle(this)">Overhead</span>
+              </div>
+            </div>
+            <div class="form-group">
+              <div class="input-label">Duration</div>
+              <div class="style-row">
+                <span class="style-chip selected" onclick="selectDur(this)">30s Reel</span>
+                <span class="style-chip" onclick="selectDur(this)">60s Short</span>
+                <span class="style-chip" onclick="selectDur(this)">3min Tutorial</span>
+              </div>
+            </div>
+            <button class="gen-btn" onclick="startGenerate()">✦ Generate Video</button>
+          </div>
+
+          <div class="vid-preview">
+            <div class="video-placeholder" id="vid-placeholder">
+              <div class="vid-icon">🎬</div>
+              <div>Your video will appear here</div>
+              <div style="font-size:11px;">Fill in the recipe and click Generate</div>
+            </div>
+            <div class="vid-meta" id="vid-meta" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const recipes = {
+  'garlic butter pasta': {
+    name: 'Garlic Butter Pasta',
+    ingredients: ['200g spaghetti','3 tbsp butter','4 garlic cloves','2 tbsp parmesan','Salt & pepper','Fresh parsley'],
+    steps: ['Boil pasta in salted water until al dente, about 8 min.','In a pan, melt butter over medium heat. Add minced garlic and cook 1-2 min.','Add drained pasta to the pan and toss well. Season generously.','Top with parmesan and fresh parsley. Serve immediately.']
+  },
+  'kimchi fried rice': {
+    name: 'Kimchi Fried Rice',
+    ingredients: ['2 cups cooked rice','1 cup kimchi','2 eggs','2 tbsp sesame oil','1 tbsp soy sauce','Green onions','Sesame seeds'],
+    steps: ['Heat sesame oil in a wok over high heat.','Add chopped kimchi and stir-fry 2-3 min until fragrant.','Push to the side, scramble eggs in the pan.','Add rice and soy sauce, mix everything together.','Top with green onions and sesame seeds.']
+  },
+  'chocolate lava cake': {
+    name: 'Chocolate Lava Cake',
+    ingredients: ['100g dark chocolate','100g butter','2 eggs','2 egg yolks','60g sugar','2 tbsp flour','Pinch of salt'],
+    steps: ['Preheat oven to 200°C. Grease 4 ramekins.','Melt chocolate and butter together. Let cool slightly.','Whisk eggs, yolks, and sugar until pale. Fold in chocolate.','Stir in flour and salt gently. Fill ramekins 3/4 full.','Bake 10-12 min — edges set, center still jiggly.']
+  },
+  'avocado toast': {
+    name: 'Avocado Toast',
+    ingredients: ['2 slices sourdough','1 ripe avocado','1 lemon (juice)','Red pepper flakes','Salt & flaky sea salt','Optional: poached egg'],
+    steps: ['Toast bread until golden and crispy.','Mash avocado with lemon juice, salt, and pepper.','Spread generously on toast.','Top with red pepper flakes and flaky sea salt.','Add a poached egg if desired. Serve immediately.']
+  }
+};
+
+function switchTool(tool, el) {
+  document.querySelectorAll('.tool-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.getElementById('panel-' + tool).classList.add('active');
+}
+
+function fillSample(name) {
+  document.getElementById('yt-input').value = 'https://youtube.com/watch?v=sample_' + name.replace(/ /g,'_');
+  document.getElementById('result-box').style.display = 'none';
+  document.getElementById('progress-box').style.display = 'none';
+}
+
+function startExtract() {
+  const url = document.getElementById('yt-input').value;
+  if (!url || url.length < 5) { document.getElementById('yt-input').style.borderColor = 'var(--flame)'; return; }
+  document.getElementById('yt-input').style.borderColor = '';
+
+  const key = Object.keys(recipes).find(k => url.includes(k.replace(/ /g,'_'))) || 'garlic butter pasta';
+  const recipe = recipes[key];
+
+  document.getElementById('result-box').style.display = 'none';
+  const pb = document.getElementById('progress-box');
+  pb.style.display = 'block';
+
+  const dots = [1,2,3,4];
+  dots.forEach(i => { document.getElementById('dot-'+i).className = 'step-dot'; document.getElementById('dot-'+i).textContent = i; });
+  document.getElementById('extract-btn').disabled = true;
+
+  let step = 1;
+  const advance = () => {
+    if (step > 1) { document.getElementById('dot-'+(step-1)).className = 'step-dot done'; document.getElementById('dot-'+(step-1)).textContent = '✓'; }
+    if (step <= 4) { document.getElementById('dot-'+step).className = 'step-dot active'; step++; setTimeout(advance, 700); }
+    else {
+      pb.style.display = 'none';
+      document.getElementById('extract-btn').disabled = false;
+      showResult(recipe);
+    }
+  };
+  advance();
+}
+
+function showResult(recipe) {
+  document.getElementById('result-name').textContent = recipe.name;
+  const ig = document.getElementById('ingredients-grid');
+  ig.innerHTML = recipe.ingredients.map(i => `<div class="ingredient-item"><div class="ingr-dot"></div>${i}</div>`).join('');
+  const sl = document.getElementById('steps-list');
+  sl.innerHTML = recipe.steps.map((s,i) => `<div class="step-item"><div class="step-num">${i+1}</div><div>${s}</div></div>`).join('');
+  document.getElementById('result-box').style.display = 'block';
+  document.getElementById('result-box').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function selectStyle(el) { document.querySelectorAll('.style-row:nth-of-type(1) .style-chip').forEach(c => c.classList.remove('selected')); el.classList.add('selected'); }
+function selectDur(el) { el.closest('.style-row').querySelectorAll('.style-chip').forEach(c => c.classList.remove('selected')); el.classList.add('selected'); }
+
+let genTimer;
+function startGenerate() {
+  const title = document.getElementById('vid-title').value || 'My Recipe';
+  const ph = document.getElementById('vid-placeholder');
+  ph.className = 'video-placeholder generating';
+  ph.innerHTML = `<div class="vid-icon" style="animation:pulse 1s infinite">✦</div><div class="vid-progress-label">Generating video...</div><div style="font-size:11px;color:var(--muted)">This takes about 30 seconds</div>`;
+  clearTimeout(genTimer);
+  genTimer = setTimeout(() => {
+    ph.className = 'video-placeholder done';
+    ph.innerHTML = `<div style="font-size:48px">▶</div><div style="font-weight:500;color:var(--dark);font-size:14px">${title}</div><div style="font-size:11px;color:var(--flame)">✓ Video ready · 30s Reel</div>`;
+    const meta = document.getElementById('vid-meta');
+    meta.style.display = 'block';
+    meta.innerHTML = `<strong style="color:var(--dark);">Video generated!</strong><br>Format: 9:16 vertical · 30 seconds · 1080p<br><br><div style="display:flex;gap:8px;margin-top:10px;"><button style="flex:1;padding:9px;background:var(--flame);color:var(--white);border:none;border-radius:10px;font-size:12px;font-weight:500;cursor:pointer;font-family:DM Sans,sans-serif;">Post with recipe</button><button style="flex:1;padding:9px;background:transparent;border:1px solid var(--border);border-radius:10px;font-size:12px;cursor:pointer;font-family:DM Sans,sans-serif;color:var(--dark);">Download</button></div>`;
+  }, 2800);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Simmers — Saved</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --flame:#D85A30;--amber:#EF9F27;--peach:#F0997B;--cream:#FAECE7;
+  --dark:#1A1108;--mid:#5C3A1E;--muted:#A07850;
+  --border:rgba(26,17,8,0.08);--white:#FDFAF7;--surface:#F7F3EE;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--surface);color:var(--dark);font-family:'DM Sans',sans-serif;min-height:100vh;}
+.layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;max-width:1200px;margin:0 auto;}
+.sidebar{padding:28px 20px;border-right:1px solid var(--border);position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px;background:var(--white);}
+.logo{font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--dark);margin-bottom:28px;padding:0 8px;}
+.logo span{color:var(--flame);}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;font-size:14px;color:var(--muted);cursor:pointer;transition:background .15s,color .15s;text-decoration:none;}
+.nav-item:hover{background:var(--cream);color:var(--dark);}
+.nav-item.active{background:var(--cream);color:var(--flame);font-weight:500;}
+.post-btn{margin-top:auto;background:var(--flame);color:var(--white);border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;}
+.post-btn:hover{background:var(--mid);}
+/* 알림 벨 */
+.notif-wrap{position:relative;margin-top:4px;}
+.notif-btn{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;font-size:14px;color:var(--muted);cursor:pointer;transition:background .15s,color .15s;width:100%;border:none;background:none;font-family:"DM Sans",sans-serif;}
+.notif-btn:hover{background:var(--cream);color:var(--dark);}
+.notif-badge{background:var(--flame);color:#fff;font-size:10px;font-weight:700;border-radius:100px;padding:1px 6px;min-width:18px;text-align:center;display:none;}
+.notif-badge.show{display:inline-block;}
+.notif-panel{display:none;position:absolute;left:100%;top:0;margin-left:12px;width:320px;background:var(--white);border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 32px rgba(26,17,8,0.12);z-index:200;overflow:hidden;}
+.notif-panel.open{display:block;}
+.notif-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid var(--border);}
+.notif-title{font-family:"Fraunces",serif;font-size:16px;font-weight:600;color:var(--dark);}
+.notif-read-all{font-size:12px;color:var(--flame);cursor:pointer;border:none;background:none;font-family:"DM Sans",sans-serif;}
+.notif-list{max-height:380px;overflow-y:auto;}
+.notif-item{display:flex;align-items:flex-start;gap:12px;padding:13px 18px;cursor:pointer;transition:background .15s;border-bottom:1px solid var(--border);}
+.notif-item:last-child{border-bottom:none;}
+.notif-item:hover{background:var(--surface);}
+.notif-item.unread{background:var(--cream);}
+.notif-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0;}
+.notif-icon{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;margin-top:-6px;margin-left:-14px;flex-shrink:0;border:2px solid var(--white);}
+.notif-body{flex:1;min-width:0;}
+.notif-text{font-size:13px;color:var(--dark);line-height:1.4;}
+.notif-text strong{font-weight:500;}
+.notif-time{font-size:11px;color:var(--muted);margin-top:3px;}
+.notif-empty{padding:32px 18px;text-align:center;color:var(--muted);font-size:13px;}
+.notif-dot{width:7px;height:7px;border-radius:50%;background:var(--flame);flex-shrink:0;margin-top:6px;}
+.main{padding:32px 40px;max-width:860px;}
+.page-title{font-family:'Fraunces',serif;font-size:28px;font-weight:600;color:var(--dark);margin-bottom:6px;}
+.page-sub{font-size:14px;color:var(--muted);margin-bottom:24px;}
+
+/* COLLECTIONS */
+.coll-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px;}
+.coll-pill{display:flex;align-items:center;gap:8px;padding:8px 16px;border-radius:100px;border:1px solid var(--border);background:var(--white);font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .15s;}
+.coll-pill:hover{border-color:var(--peach);color:var(--flame);}
+.coll-pill.active{background:var(--flame);color:var(--white);border-color:transparent;}
+.coll-count{font-size:11px;opacity:.7;}
+.new-coll{border-style:dashed;}
+
+/* SAVED GRID */
+.saved-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+.saved-card{background:var(--white);border:1px solid var(--border);border-radius:16px;overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s;position:relative;}
+.saved-card:hover{transform:translateY(-3px);box-shadow:0 8px 28px rgba(216,90,48,0.1);}
+.saved-thumb{height:140px;display:flex;align-items:center;justify-content:center;font-size:52px;}
+.unsave-btn{position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:50%;background:rgba(253,250,247,0.9);border:none;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+.unsave-btn:hover{background:var(--white);}
+.saved-body{padding:12px;}
+.saved-name{font-size:13px;font-weight:500;color:var(--dark);margin-bottom:4px;}
+.saved-meta{font-size:11px;color:var(--muted);display:flex;gap:8px;}
+.saved-tags{display:flex;gap:4px;margin-top:6px;}
+.stag{font-size:10px;padding:2px 8px;border-radius:100px;background:var(--surface);color:var(--mid);}
+.stag.cat{background:var(--cream);color:var(--flame);}
+
+/* EMPTY STATE */
+.empty{display:none;flex-direction:column;align-items:center;justify-content:center;padding:60px 20px;text-align:center;gap:12px;}
+.empty-icon{font-size:48px;}
+.empty-title{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--dark);}
+.empty-sub{font-size:14px;color:var(--muted);max-width:300px;line-height:1.6;}
+.empty-btn{padding:11px 24px;background:var(--flame);color:var(--white);border:none;border-radius:100px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;margin-top:8px;}
+
+/* STATS ROW */
+.stats-row{display:flex;gap:12px;margin-bottom:24px;}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px 18px;text-align:center;flex:1;}
+.stat-val{font-size:20px;font-weight:500;color:var(--dark);font-family:'Fraunces',serif;}
+.stat-label{font-size:11px;color:var(--muted);margin-top:2px;}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr;}.sidebar{display:none;}.main{padding:20px;}.saved-grid{grid-template-columns:repeat(2,1fr);}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo">Simmer<span>s</span></div>
+    <a class="nav-item" href="simmers-feed.html">⊞ &nbsp;Feed</a>
+    <a class="nav-item" href="simmers-ai-tools-LIVE.html">✦ &nbsp;AI Tools</a>
+    <a class="nav-item" href="simmers-explore.html">🔍 &nbsp;Explore</a>
+    <a class="nav-item active" href="simmers-saved.html">🔖 &nbsp;Saved</a>
+    <a class="nav-item" href="simmers-profile.html">○ &nbsp;Profile</a>
+        <div class="notif-wrap">
+      <button class="notif-btn" onclick="toggleNotifPanel()">
+        <span>🔔</span> Notifications
+        <span class="notif-badge" id="notif-badge"></span>
+      </button>
+      <div class="notif-panel" id="notif-panel">
+        <div class="notif-header">
+          <div class="notif-title">Notifications</div>
+          <button class="notif-read-all" onclick="markAllRead()">Mark all read</button>
+        </div>
+        <div class="notif-list" id="notif-list">
+          <div class="notif-empty">Loading...</div>
+        </div>
+      </div>
+    </div>
+    <button class="post-btn" onclick="location.href='simmers-recipe.html'">+ Post a Recipe</button>
+  </aside>
+
+  <main class="main">
+    <div class="page-title">Saved recipes</div>
+    <div class="page-sub">Your personal cookbook — recipes you love, all in one place.</div>
+
+    <div class="stats-row">
+      <div class="stat-card"><div class="stat-val" id="total-saved">5</div><div class="stat-label">Saved</div></div>
+      <div class="stat-card"><div class="stat-val">2</div><div class="stat-label">Collections</div></div>
+      <div class="stat-card"><div class="stat-val">3</div><div class="stat-label">Cuisines</div></div>
+    </div>
+
+    <!-- COLLECTIONS -->
+    <div class="coll-row">
+      <span class="coll-pill active" onclick="filterColl(this,'all')">All <span class="coll-count">5</span></span>
+      <span class="coll-pill" onclick="filterColl(this,'weeknight')">Weeknight <span class="coll-count">3</span></span>
+      <span class="coll-pill" onclick="filterColl(this,'dessert')">Desserts <span class="coll-count">2</span></span>
+      <span class="coll-pill new-coll" onclick="newCollection()">+ New collection</span>
+    </div>
+
+    <!-- SAVED GRID -->
+    <div class="saved-grid" id="saved-grid">
+
+    <div class="empty" id="empty-state">
+      <div class="empty-icon">🔖</div>
+      <div class="empty-title">Nothing saved yet</div>
+      <div class="empty-sub">Tap the bookmark icon on any recipe to save it here.</div>
+      <button class="empty-btn" onclick="location.href='simmers-explore.html'">Browse recipes</button>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+const SUPABASE_URL = 'https://ifsaasfsapbkufvgjyzs.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlmc2Fhc2ZzYXBia3VmdmdqeXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNzQxNjAsImV4cCI6MjA4OTk1MDE2MH0.CGyqmFhq0KVwISbcJnF-R1Vvh1knBOa24OG6Pt-HAKI'
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+
+const { data: { user } } = await supabase.auth.getUser()
+if (!user) { location.href = 'simmers-auth.html' }
+
+let allSaves = []
+
+// ── 저장된 레시피 불러오기 ──
+async function loadSaved() {
+  const { data: saves, error } = await supabase
+    .from('saves')
+    .select('*, recipes(id, title, category, difficulty, time_minutes, cover_emoji, tags)')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+
+  if (error || !saves) return
+
+  allSaves = saves.filter(s => s.recipes)
+
+  // 통계
+  document.getElementById('total-saved').textContent = allSaves.length
+  const cuisines = new Set(allSaves.map(s => s.recipes?.category).filter(Boolean))
+  document.querySelectorAll('.stat-val')[2].textContent = cuisines.size
+
+  // 컬렉션 목록
+  const collections = {}
+  allSaves.forEach(s => {
+    const coll = s.collection || 'General'
+    collections[coll] = (collections[coll] || 0) + 1
+  })
+  const collRow = document.querySelector('.coll-row')
+  collRow.innerHTML = `
+    <span class="coll-pill active" onclick="filterColl(this,'all')">All <span class="coll-count">${allSaves.length}</span></span>
+    ${Object.entries(collections).map(([name, count]) =>
+      `<span class="coll-pill" onclick="filterColl(this,'${name}')">${name} <span class="coll-count">${count}</span></span>`
+    ).join('')}
+    <span class="coll-pill new-coll" onclick="newCollection()">+ New collection</span>`
+  document.querySelectorAll('.stat-val')[1].textContent = Object.keys(collections).length
+
+  renderCards(allSaves)
+}
+
+const gradients = [
+  'linear-gradient(135deg,#AFA9EC,#9FE1CB)',
+  'linear-gradient(135deg,#F0997B,#FAC775)',
+  'linear-gradient(135deg,#C0DD97,#5DCAA5)',
+  'linear-gradient(135deg,#F09595,#E24B4A)',
+  'linear-gradient(135deg,#85B7EB,#378ADD)',
+  'linear-gradient(135deg,#FAC775,#D85A30)',
+]
+
+function renderCards(saves) {
+  const grid = document.getElementById('saved-grid')
+  grid.innerHTML = ''
+
+  saves.forEach((s, i) => {
+    const r = s.recipes
+    const card = document.createElement('div')
+    card.className = 'saved-card'
+    card.dataset.coll = s.collection || 'General'
+    card.dataset.saveId = s.id
+    card.dataset.recipeId = r.id
+    card.onclick = () => location.href = `simmers-recipe.html?id=${r.id}`
+    card.innerHTML = `
+      <div class="saved-thumb" style="background:${gradients[i % gradients.length]};">${r.cover_emoji || '🍽️'}</div>
+      <button class="unsave-btn" onclick="unsave(event,this)" title="Remove">🔖</button>
+      <div class="saved-body">
+        <div class="saved-name">${r.title}</div>
+        <div class="saved-meta">
+          ${r.time_minutes ? `<span>${r.time_minutes} min</span>` : ''}
+          ${r.difficulty ? `<span>${r.difficulty}</span>` : ''}
+        </div>
+        <div class="saved-tags">
+          ${r.category ? `<span class="stag cat">${r.category}</span>` : ''}
+        </div>
+      </div>`
+    grid.appendChild(card)
+  })
+  checkEmpty()
+}
+
+// ── 컬렉션 필터 ──
+window.filterColl = function(el, coll) {
+  document.querySelectorAll('.coll-pill').forEach(p => p.classList.remove('active'))
+  el.classList.add('active')
+  const filtered = coll === 'all' ? allSaves : allSaves.filter(s => (s.collection || 'General') === coll)
+  renderCards(filtered)
+}
+
+// ── 저장 해제 ──
+window.unsave = async function(e, btn) {
+  e.stopPropagation()
+  const card = btn.closest('.saved-card')
+  const saveId = card.dataset.saveId
+
+  card.style.opacity = '0'
+  card.style.transform = 'scale(0.95)'
+  card.style.transition = 'all .2s'
+
+  await supabase.from('saves').delete().eq('id', saveId)
+
+  setTimeout(() => {
+    card.remove()
+    allSaves = allSaves.filter(s => s.id !== saveId)
+    document.getElementById('total-saved').textContent = allSaves.length
+    checkEmpty()
+  }, 200)
+}
+
+// ── 새 컬렉션 ──
+window.newCollection = function() {
+  const name = prompt('Collection name:')
+  if (name) alert(`"${name}" collection ready! Save recipes to add them here.`)
+}
+
+function checkEmpty() {
+  const cards = document.querySelectorAll('.saved-card')
+  document.getElementById('empty-state').style.display = cards.length === 0 ? 'flex' : 'none'
+  document.getElementById('saved-grid').style.display = cards.length === 0 ? 'none' : 'grid'
+}
+
+loadSaved()
+
+// ── 알림 시스템 ──
+window.toggleNotifPanel = function() {
+  const panel = document.getElementById('notif-panel')
+  panel.classList.toggle('open')
+  if (panel.classList.contains('open')) loadNotifications()
+}
+document.addEventListener('click', e => {
+  const wrap = document.querySelector('.notif-wrap')
+  if (wrap && !wrap.contains(e.target)) document.getElementById('notif-panel')?.classList.remove('open')
+})
+const typeIcon = { like:'♥', comment:'💬', follow:'👤', save:'🔖' }
+const typeColor = { like:'#EEEDFE', comment:'#FAECE7', follow:'#E1F5EE', save:'#FAEEDA' }
+const typeTextColor = { like:'#534AB7', comment:'#D85A30', follow:'#0F6E56', save:'#854F0B' }
+
+window.loadNotifications = async function() {
+  if (!user) return
+  const { data: notifs } = await supabase
+    .from('notifications')
+    .select('*, actor:profiles!notifications_actor_id_fkey(username)')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(30)
+  const list = document.getElementById('notif-list')
+  const badge = document.getElementById('notif-badge')
+  if (!notifs || notifs.length === 0) {
+    list.innerHTML = '<div class="notif-empty">No notifications yet 🔔</div>'
+    return
+  }
+  const unreadCount = notifs.filter(n => !n.is_read).length
+  if (unreadCount > 0) { badge.textContent = unreadCount > 9 ? '9+' : unreadCount; badge.classList.add('show') }
+  list.innerHTML = ''
+  notifs.forEach(n => {
+    const actor = n.actor?.username || 'Someone'
+    const t = n.type
+    const el = document.createElement('div')
+    el.className = `notif-item ${n.is_read ? '' : 'unread'}`
+    el.dataset.id = n.id
+    el.onclick = () => markRead(n.id, n.recipe_id)
+    el.innerHTML = `
+      <div style="position:relative;display:flex;flex-direction:column;align-items:center;">
+        <div class="notif-avatar" style="background:${typeColor[t]};color:${typeTextColor[t]};">${actor.slice(0,2).toUpperCase()}</div>
+        <div class="notif-icon" style="background:${typeColor[t]};color:${typeTextColor[t]};">${typeIcon[t]}</div>
+      </div>
+      <div class="notif-body">
+        <div class="notif-text">${n.message || `<strong>${actor}</strong> interacted with your content`}</div>
+        <div class="notif-time">${getTimeAgo(n.created_at)}</div>
+      </div>
+      ${!n.is_read ? '<div class="notif-dot"></div>' : ''}`
+    list.appendChild(el)
+  })
+}
+window.markRead = async function(id, recipeId) {
+  await supabase.from('notifications').update({ is_read: true }).eq('id', id)
+  document.querySelector(`[data-id="${id}"]`)?.classList.remove('unread')
+  document.querySelector(`[data-id="${id}"] .notif-dot`)?.remove()
+  updateBadge()
+  if (recipeId) location.href = `simmers-recipe.html?id=${recipeId}`
+}
+window.markAllRead = async function() {
+  if (!user) return
+  await supabase.from('notifications').update({ is_read: true }).eq('user_id', user.id)
+  document.querySelectorAll('.notif-item').forEach(el => { el.classList.remove('unread'); el.querySelector('.notif-dot')?.remove() })
+  updateBadge()
+}
+function updateBadge() {
+  const unread = document.querySelectorAll('.notif-item.unread').length
+  const badge = document.getElementById('notif-badge')
+  if (unread > 0) { badge.textContent = unread > 9 ? '9+' : unread; badge.classList.add('show') }
+  else badge.classList.remove('show')
+}
+if (user) loadNotifications()
+
+</script>
+</body>
+</html>

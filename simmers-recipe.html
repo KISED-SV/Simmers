@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Simmers — Recipe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --flame:#D85A30; --amber:#EF9F27; --peach:#F0997B; --cream:#FAECE7;
+  --dark:#1A1108; --mid:#5C3A1E; --muted:#A07850;
+  --border:rgba(26,17,8,0.08); --white:#FDFAF7; --surface:#F7F3EE;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--surface);color:var(--dark);font-family:'DM Sans',sans-serif;min-height:100vh;}
+
+.layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;max-width:1200px;margin:0 auto;}
+
+/* SIDEBAR */
+.sidebar{padding:28px 20px;border-right:1px solid var(--border);position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px;background:var(--white);}
+.logo{font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--dark);margin-bottom:28px;padding:0 8px;}
+.logo span{color:var(--flame);}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;font-size:14px;color:var(--muted);cursor:pointer;transition:background .15s,color .15s;text-decoration:none;}
+.nav-item:hover{background:var(--cream);color:var(--dark);}
+.nav-item.active{background:var(--cream);color:var(--flame);font-weight:500;}
+.post-btn{margin-top:auto;background:var(--flame);color:var(--white);border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;}
+.post-btn:hover{background:var(--mid);}
+/* 알림 벨 */
+.notif-wrap{position:relative;margin-top:4px;}
+.notif-btn{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;font-size:14px;color:var(--muted);cursor:pointer;transition:background .15s,color .15s;width:100%;border:none;background:none;font-family:"DM Sans",sans-serif;}
+.notif-btn:hover{background:var(--cream);color:var(--dark);}
+.notif-badge{background:var(--flame);color:#fff;font-size:10px;font-weight:700;border-radius:100px;padding:1px 6px;min-width:18px;text-align:center;display:none;}
+.notif-badge.show{display:inline-block;}
+.notif-panel{display:none;position:absolute;left:100%;top:0;margin-left:12px;width:320px;background:var(--white);border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 32px rgba(26,17,8,0.12);z-index:200;overflow:hidden;}
+.notif-panel.open{display:block;}
+.notif-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid var(--border);}
+.notif-title{font-family:"Fraunces",serif;font-size:16px;font-weight:600;color:var(--dark);}
+.notif-read-all{font-size:12px;color:var(--flame);cursor:pointer;border:none;background:none;font-family:"DM Sans",sans-serif;}
+.notif-list{max-height:380px;overflow-y:auto;}
+.notif-item{display:flex;align-items:flex-start;gap:12px;padding:13px 18px;cursor:pointer;transition:background .15s;border-bottom:1px solid var(--border);}
+.notif-item:last-child{border-bottom:none;}
+.notif-item:hover{background:var(--surface);}
+.notif-item.unread{background:var(--cream);}
+.notif-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0;}
+.notif-icon{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;margin-top:-6px;margin-left:-14px;flex-shrink:0;border:2px solid var(--white);}
+.notif-body{flex:1;min-width:0;}
+.notif-text{font-size:13px;color:var(--dark);line-height:1.4;}
+.notif-text strong{font-weight:500;}
+.notif-time{font-size:11px;color:var(--muted);margin-top:3px;}
+.notif-empty{padding:32px 18px;text-align:center;color:var(--muted);font-size:13px;}
+.notif-dot{width:7px;height:7px;border-radius:50%;background:var(--flame);flex-shrink:0;margin-top:6px;}
+
+/* MODE TOGGLE */
+.main{padding:32px 40px;max-width:860px;}
+.mode-bar{display:flex;gap:0;background:var(--white);border:1px solid var(--border);border-radius:14px;padding:4px;width:fit-content;margin-bottom:28px;}
+.mode-btn{padding:9px 22px;border-radius:10px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border:none;background:transparent;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.mode-btn.active{background:var(--flame);color:var(--white);}
+
+/* ── WRITE MODE ── */
+.write-panel{display:block;}
+.write-header{margin-bottom:24px;}
+.write-title-input{width:100%;font-family:'Fraunces',serif;font-size:28px;font-weight:600;color:var(--dark);border:none;background:transparent;outline:none;margin-bottom:8px;}
+.write-title-input::placeholder{color:rgba(160,120,80,0.4);}
+.write-sub{font-size:13px;color:var(--muted);}
+
+.upload-zone{width:100%;height:180px;border:2px dashed rgba(216,90,48,0.25);border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all .2s;margin-bottom:24px;background:var(--white);}
+.upload-zone:hover{border-color:var(--flame);background:var(--cream);}
+.upload-icon{font-size:32px;}
+.upload-label{font-size:13px;color:var(--muted);}
+.upload-sub{font-size:11px;color:rgba(160,120,80,0.6);}
+.upload-zone.has-image{border-style:solid;border-color:var(--flame);background:linear-gradient(135deg,#F0997B33,#EF9F2722);font-size:48px;}
+
+.form-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px;}
+.form-group{display:flex;flex-direction:column;gap:6px;}
+.form-label{font-size:11px;font-weight:500;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;}
+.form-select,.form-input-sm{padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;color:var(--dark);background:var(--white);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;cursor:pointer;}
+.form-select:focus,.form-input-sm:focus{border-color:var(--flame);}
+
+.section-title-row{display:flex;align-items:center;justify-content:space-between;margin:20px 0 12px;}
+.section-title{font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:var(--dark);}
+.add-btn{font-size:12px;font-weight:500;color:var(--flame);border:1px solid rgba(216,90,48,0.25);background:var(--cream);padding:6px 14px;border-radius:100px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.add-btn:hover{background:var(--flame);color:var(--white);border-color:transparent;}
+
+/* INGREDIENTS */
+.ingr-list{display:flex;flex-direction:column;gap:8px;margin-bottom:8px;}
+.ingr-row{display:flex;gap:8px;align-items:center;}
+.ingr-amount{width:80px;padding:9px 10px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;color:var(--dark);background:var(--white);font-family:'DM Sans',sans-serif;outline:none;}
+.ingr-amount:focus{border-color:var(--flame);}
+.ingr-unit{width:72px;padding:9px 8px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;color:var(--dark);background:var(--white);font-family:'DM Sans',sans-serif;outline:none;cursor:pointer;}
+.ingr-name{flex:1;padding:9px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;color:var(--dark);background:var(--white);font-family:'DM Sans',sans-serif;outline:none;}
+.ingr-name:focus,.ingr-unit:focus{border-color:var(--flame);}
+.del-btn{font-size:16px;color:var(--muted);cursor:pointer;background:none;border:none;padding:4px;line-height:1;transition:color .15s;}
+.del-btn:hover{color:var(--flame);}
+
+/* STEPS */
+.steps-list{display:flex;flex-direction:column;gap:10px;margin-bottom:8px;}
+.step-row{display:flex;gap:10px;align-items:flex-start;}
+.step-num-badge{width:28px;height:28px;border-radius:50%;background:var(--flame);color:var(--white);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0;margin-top:8px;}
+.step-textarea{flex:1;padding:10px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;color:var(--dark);background:var(--white);font-family:'DM Sans',sans-serif;outline:none;resize:none;min-height:60px;line-height:1.6;transition:border-color .2s;}
+.step-textarea:focus{border-color:var(--flame);}
+
+.tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;}
+.tag-chip{font-size:11px;padding:5px 12px;border-radius:100px;border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all .15s;background:var(--surface);}
+.tag-chip:hover,.tag-chip.sel{background:var(--cream);border-color:var(--peach);color:var(--flame);}
+
+.publish-row{display:flex;gap:10px;margin-top:24px;}
+.pub-btn{flex:1;padding:13px;border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
+.pub-primary{background:var(--flame);color:var(--white);border:none;}
+.pub-primary:hover{background:var(--mid);}
+.pub-secondary{background:transparent;color:var(--dark);border:1px solid var(--border);}
+.pub-secondary:hover{background:var(--surface);}
+
+/* ── DETAIL MODE ── */
+.detail-panel{display:none;}
+.recipe-hero{width:100%;height:280px;border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:80px;margin-bottom:24px;background:linear-gradient(135deg,#AFA9EC 0%,#9FE1CB 100%);position:relative;overflow:hidden;}
+.hero-overlay{position:absolute;bottom:0;left:0;right:0;padding:20px 24px;background:linear-gradient(transparent,rgba(26,17,8,0.55));display:flex;align-items:flex-end;justify-content:space-between;}
+.hero-badges{display:flex;gap:6px;}
+.hbadge{font-size:11px;padding:4px 12px;border-radius:100px;background:rgba(253,250,247,0.9);color:var(--dark);font-weight:500;}
+.hbadge.fire{background:var(--flame);color:var(--white);}
+.save-btn{width:36px;height:36px;border-radius:50%;background:rgba(253,250,247,0.9);border:none;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;transition:background .15s;}
+.save-btn:hover{background:var(--white);}
+
+.detail-meta{display:flex;align-items:center;gap:10px;margin-bottom:16px;}
+.author-avatar{width:36px;height:36px;border-radius:50%;background:#EEEDFE;color:#534AB7;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;}
+.author-name{font-size:13px;font-weight:500;color:var(--dark);}
+.author-time{font-size:11px;color:var(--muted);}
+.detail-follow{margin-left:auto;border:1px solid var(--border);background:transparent;color:var(--muted);padding:6px 16px;border-radius:100px;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.detail-follow:hover{border-color:var(--flame);color:var(--flame);}
+
+.detail-title{font-family:'Fraunces',serif;font-size:28px;font-weight:700;color:var(--dark);margin-bottom:10px;line-height:1.2;}
+.detail-desc{font-size:14px;color:var(--muted);line-height:1.7;margin-bottom:20px;}
+
+.stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:28px;}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px;text-align:center;}
+.stat-val{font-size:18px;font-weight:500;color:var(--dark);font-family:'Fraunces',serif;}
+.stat-label{font-size:10px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.04em;}
+
+.detail-section{margin-bottom:28px;}
+.detail-section-title{font-family:'Fraunces',serif;font-size:18px;font-weight:600;color:var(--dark);margin-bottom:14px;padding-bottom:8px;border-bottom:1px solid var(--border);}
+.ingr-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.ingr-card{display:flex;align-items:center;gap:10px;background:var(--white);border:1px solid var(--border);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--dark);}
+.ingr-dot{width:6px;height:6px;border-radius:50%;background:var(--flame);flex-shrink:0;}
+.ingr-amount-badge{margin-left:auto;font-size:11px;color:var(--muted);}
+
+.detail-step{display:flex;gap:14px;margin-bottom:16px;}
+.d-step-num{width:30px;height:30px;border-radius:50%;background:var(--flame);color:var(--white);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0;margin-top:2px;}
+.d-step-text{font-size:14px;color:var(--dark);line-height:1.7;padding-top:4px;}
+
+.action-bar{display:flex;gap:10px;padding:16px 0;border-top:1px solid var(--border);border-bottom:1px solid var(--border);margin-bottom:24px;}
+.act-btn{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);cursor:pointer;padding:8px 14px;border-radius:10px;border:none;background:transparent;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.act-btn:hover{background:var(--surface);color:var(--dark);}
+.act-btn.liked{color:var(--flame);}
+.act-spacer{flex:1;}
+.watch-pill{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:500;color:var(--flame);padding:8px 18px;border-radius:100px;border:1px solid rgba(216,90,48,0.3);background:var(--cream);cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.watch-pill:hover{background:var(--flame);color:var(--white);border-color:transparent;}
+
+/* COMMENTS */
+.comment-input-row{display:flex;gap:10px;margin-bottom:16px;}
+.comment-avatar{width:34px;height:34px;border-radius:50%;background:var(--cream);color:var(--flame);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:500;flex-shrink:0;}
+.comment-input{flex:1;padding:10px 14px;border:1.5px solid var(--border);border-radius:100px;font-size:13px;color:var(--dark);background:var(--white);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;}
+.comment-input:focus{border-color:var(--flame);}
+.comment-send{padding:10px 18px;background:var(--flame);color:var(--white);border:none;border-radius:100px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.comment{display:flex;gap:10px;margin-bottom:14px;}
+.comment-body{flex:1;}
+.comment-name{font-size:13px;font-weight:500;color:var(--dark);}
+.comment-time{font-size:11px;color:var(--muted);margin-left:6px;}
+.comment-text{font-size:13px;color:var(--mid);line-height:1.6;margin-top:2px;}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr;}.sidebar{display:none;}.main{padding:20px;}.form-grid{grid-template-columns:1fr 1fr;}.stat-row{grid-template-columns:1fr 1fr;}.ingr-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo">Simmer<span>s</span></div>
+    <a class="nav-item" href="simmers-feed.html">⊞ &nbsp;Feed</a>
+    <a class="nav-item" href="simmers-ai-tools-LIVE.html">✦ &nbsp;AI Tools</a>
+    <a class="nav-item" href="simmers-explore.html">🔍 &nbsp;Explore</a>
+    <a class="nav-item" href="simmers-saved.html">🔖 &nbsp;Saved</a>
+    <a class="nav-item active" href="simmers-profile.html">○ &nbsp;Profile</a>
+        <div class="notif-wrap">
+      <button class="notif-btn" onclick="toggleNotifPanel()">
+        <span>🔔</span> Notifications
+        <span class="notif-badge" id="notif-badge"></span>
+      </button>
+      <div class="notif-panel" id="notif-panel">
+        <div class="notif-header">
+          <div class="notif-title">Notifications</div>
+          <button class="notif-read-all" onclick="markAllRead()">Mark all read</button>
+        </div>
+        <div class="notif-list" id="notif-list">
+          <div class="notif-empty">Loading...</div>
+        </div>
+      </div>
+    </div>
+    <button class="post-btn" onclick="location.href='simmers-recipe.html'">+ Post a Recipe</button>
+  </aside>
+
+  <main class="main">
+    <div class="mode-bar">
+      <button class="mode-btn active" onclick="setMode('write',this)">✏️ Write Recipe</button>
+      <button class="mode-btn" onclick="setMode('detail',this)">👁 Preview Detail</button>
+    </div>
+
+    <!-- ══ WRITE MODE ══ -->
+    <div class="write-panel" id="write-panel">
+      <div class="write-header">
+        <input class="write-title-input" id="w-title" placeholder="Recipe name..." oninput="syncTitle(this.value)" />
+        <div class="write-sub">Fill in the details below to share your recipe with the community.</div>
+      </div>
+
+      <div class="upload-zone" id="upload-zone" onclick="document.getElementById('cover-file-input').click()">
+        <input type="file" id="cover-file-input" accept="image/*" style="display:none" onchange="handleCoverUpload(event)" />
+        <div class="upload-icon" id="upload-icon">📷</div>
+        <div class="upload-label" id="upload-label">Add a cover photo</div>
+        <div class="upload-sub" id="upload-sub">JPG, PNG · Max 10MB</div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <div class="form-label">Category</div>
+          <select class="form-select">
+            <option>Italian</option><option>Korean</option><option>Japanese</option>
+            <option>Mexican</option><option>Fusion</option><option>American</option><option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Difficulty</div>
+          <select class="form-select">
+            <option>Easy</option><option>Medium</option><option>Hard</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <div class="form-label">Time (min)</div>
+          <input class="form-input-sm" type="number" value="15" min="1" />
+        </div>
+      </div>
+
+      <!-- INGREDIENTS -->
+      <div class="section-title-row">
+        <div class="section-title">Ingredients</div>
+        <button class="add-btn" onclick="addIngredient()">+ Add</button>
+      </div>
+      <div class="ingr-list" id="ingr-list">
+        <div class="ingr-row">
+          <input class="ingr-amount" placeholder="200" />
+          <select class="ingr-unit"><option>g</option><option>ml</option><option>tbsp</option><option>tsp</option><option>cup</option><option>pcs</option></select>
+          <input class="ingr-name" placeholder="spaghetti" />
+          <button class="del-btn" onclick="delRow(this)">×</button>
+        </div>
+        <div class="ingr-row">
+          <input class="ingr-amount" placeholder="3" />
+          <select class="ingr-unit"><option>tbsp</option><option>g</option><option>ml</option><option>tsp</option><option>cup</option><option>pcs</option></select>
+          <input class="ingr-name" placeholder="butter" />
+          <button class="del-btn" onclick="delRow(this)">×</button>
+        </div>
+        <div class="ingr-row">
+          <input class="ingr-amount" placeholder="4" />
+          <select class="ingr-unit"><option>pcs</option><option>g</option><option>ml</option><option>tbsp</option><option>tsp</option><option>cup</option></select>
+          <input class="ingr-name" placeholder="garlic cloves" />
+          <button class="del-btn" onclick="delRow(this)">×</button>
+        </div>
+      </div>
+
+      <!-- STEPS -->
+      <div class="section-title-row">
+        <div class="section-title">Steps</div>
+        <button class="add-btn" onclick="addStep()">+ Add</button>
+      </div>
+      <div class="steps-list" id="steps-list">
+        <div class="step-row">
+          <div class="step-num-badge">1</div>
+          <textarea class="step-textarea" placeholder="Boil pasta in salted water until al dente, about 8 minutes."></textarea>
+          <button class="del-btn" onclick="delRow(this);renumber()" style="margin-top:8px;">×</button>
+        </div>
+        <div class="step-row">
+          <div class="step-num-badge">2</div>
+          <textarea class="step-textarea" placeholder="Melt butter in a pan, add minced garlic and cook 1-2 min."></textarea>
+          <button class="del-btn" onclick="delRow(this);renumber()" style="margin-top:8px;">×</button>
+        </div>
+        <div class="step-row">
+          <div class="step-num-badge">3</div>
+          <textarea class="step-textarea" placeholder="Toss drained pasta with garlic butter. Season and serve."></textarea>
+          <button class="del-btn" onclick="delRow(this);renumber()" style="margin-top:8px;">×</button>
+        </div>
+      </div>
+
+      <!-- TAGS -->
+      <div class="section-title-row" style="margin-top:20px;">
+        <div class="section-title">Tags</div>
+      </div>
+      <div class="tag-row">
+        <span class="tag-chip sel" onclick="toggleTag(this)">Quick</span>
+        <span class="tag-chip" onclick="toggleTag(this)">Vegetarian</span>
+        <span class="tag-chip" onclick="toggleTag(this)">Vegan</span>
+        <span class="tag-chip sel" onclick="toggleTag(this)">Weeknight</span>
+        <span class="tag-chip" onclick="toggleTag(this)">Meal Prep</span>
+        <span class="tag-chip" onclick="toggleTag(this)">Budget</span>
+        <span class="tag-chip" onclick="toggleTag(this)">Spicy</span>
+        <span class="tag-chip" onclick="toggleTag(this)">Kid-friendly</span>
+      </div>
+
+      <div class="publish-row">
+        <button class="pub-btn pub-primary" onclick="setMode('detail', document.querySelectorAll('.mode-btn')[1])">Preview ↗</button>
+        <button class="pub-btn pub-secondary">Save draft</button>
+        <button class="pub-btn pub-primary" style="max-width:160px;" onclick="publishRecipe()">Publish</button>
+      </div>
+    </div>
+
+    <!-- ══ DETAIL MODE ══ -->
+    <div class="detail-panel" id="detail-panel">
+      <div class="recipe-hero" id="d-hero">
+        🍝
+        <div class="hero-overlay">
+          <div class="hero-badges">
+            <span class="hbadge">15 min</span>
+            <span class="hbadge">Easy</span>
+            <span class="hbadge fire">Italian</span>
+          </div>
+          <button class="save-btn" onclick="toggleSave(this)">🔖</button>
+        </div>
+      </div>
+
+      <div class="detail-meta">
+        <div class="author-avatar">JC</div>
+        <div>
+          <div class="author-name">jamie_cooks</div>
+          <div class="author-time">Just now</div>
+        </div>
+        <button class="detail-follow" onclick="toggleFollow(this)">Follow</button>
+      </div>
+
+      <div class="detail-title" id="d-title">Garlic Butter Pasta</div>
+      <div class="detail-desc">The ultimate weeknight pasta — rich, garlicky, and done before you even realize you started cooking. Simple ingredients, big flavor.</div>
+
+      <div class="action-bar">
+        <button class="act-btn" onclick="toggleLike(this)"><span>♡</span> 0</button>
+        <button class="act-btn"><span>💬</span> 0</button>
+        <button class="act-btn"><span>↗</span> Share</button>
+        <div class="act-spacer"></div>
+        <button class="watch-pill">▶ Watch video</button>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-card"><div class="stat-val">15</div><div class="stat-label">Minutes</div></div>
+        <div class="stat-card"><div class="stat-val">2</div><div class="stat-label">Servings</div></div>
+        <div class="stat-card"><div class="stat-val">Easy</div><div class="stat-label">Difficulty</div></div>
+        <div class="stat-card"><div class="stat-val">480</div><div class="stat-label">Calories</div></div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-section-title">Ingredients</div>
+        <div class="ingr-grid">
+          <div class="ingr-card"><div class="ingr-dot"></div>Spaghetti<span class="ingr-amount-badge">200g</span></div>
+          <div class="ingr-card"><div class="ingr-dot"></div>Butter<span class="ingr-amount-badge">3 tbsp</span></div>
+          <div class="ingr-card"><div class="ingr-dot"></div>Garlic cloves<span class="ingr-amount-badge">4 pcs</span></div>
+          <div class="ingr-card"><div class="ingr-dot"></div>Parmesan<span class="ingr-amount-badge">2 tbsp</span></div>
+          <div class="ingr-card"><div class="ingr-dot"></div>Fresh parsley<span class="ingr-amount-badge">handful</span></div>
+          <div class="ingr-card"><div class="ingr-dot"></div>Salt & pepper<span class="ingr-amount-badge">to taste</span></div>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-section-title">Steps</div>
+        <div class="detail-step"><div class="d-step-num">1</div><div class="d-step-text">Boil pasta in well-salted water until al dente, about 8 minutes. Reserve ¼ cup pasta water before draining.</div></div>
+        <div class="detail-step"><div class="d-step-num">2</div><div class="d-step-text">Meanwhile, melt butter in a large pan over medium heat. Add minced garlic and cook for 1–2 minutes until fragrant — don't let it brown.</div></div>
+        <div class="detail-step"><div class="d-step-num">3</div><div class="d-step-text">Add drained pasta to the pan and toss to coat. Splash in a little pasta water if needed to loosen. Season generously with salt and pepper.</div></div>
+        <div class="detail-step"><div class="d-step-num">4</div><div class="d-step-text">Plate up, top with freshly grated parmesan and chopped parsley. Serve immediately.</div></div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-section-title">Comments</div>
+        <div class="comment-input-row">
+          <div class="comment-avatar">JK</div>
+          <input class="comment-input" id="comment-in" placeholder="Leave a comment..." />
+          <button class="comment-send" onclick="postComment()">Post</button>
+        </div>
+        <div id="comments-list">
+          <div class="comment">
+            <div class="comment-avatar" style="background:#E1F5EE;color:#0F6E56;">SE</div>
+            <div class="comment-body">
+              <div><span class="comment-name">soyeon_eats</span><span class="comment-time">2h ago</span></div>
+              <div class="comment-text">Made this last night and it was incredible. Added a bit of lemon zest too — highly recommend!</div>
+            </div>
+          </div>
+          <div class="comment">
+            <div class="comment-avatar" style="background:#FAEEDA;color:#854F0B;">MR</div>
+            <div class="comment-body">
+              <div><span class="comment-name">miso_recipes</span><span class="comment-time">5h ago</span></div>
+              <div class="comment-text">This is my go-to weeknight dinner now. So simple and so good.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+// ── UI 유틸 (Supabase 없이도 동작) ──
+function setMode(mode, btn) {
+  document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'))
+  btn.classList.add('active')
+  document.getElementById('write-panel').style.display = mode === 'write' ? 'block' : 'none'
+  document.getElementById('detail-panel').style.display = mode === 'detail' ? 'block' : 'none'
+  if (mode === 'detail') loadRecipeDetail()
+}
+function syncTitle(val) {
+  document.getElementById('d-title').textContent = val || 'Garlic Butter Pasta'
+}
+function toggleImage() {} // legacy, kept for compatibility
+function handleCoverUpload(e) {
+  const file = e.target.files[0]
+  if (!file) return
+  if (file.size > 10 * 1024 * 1024) { alert('이미지는 10MB 이하만 가능해요.'); return }
+  const zone = document.getElementById('upload-zone')
+  const reader = new FileReader()
+  reader.onload = (ev) => {
+    zone.style.backgroundImage = `url(${ev.target.result})`
+    zone.style.backgroundSize = 'cover'
+    zone.style.backgroundPosition = 'center'
+    document.getElementById('upload-icon').style.display = 'none'
+    document.getElementById('upload-label').textContent = file.name
+    document.getElementById('upload-sub').textContent = 'Click to change'
+  }
+  reader.readAsDataURL(file)
+}
+function addIngredient() {
+  const list = document.getElementById('ingr-list')
+  const row = document.createElement('div'); row.className = 'ingr-row'
+  row.innerHTML = `<input class="ingr-amount" placeholder="0" /><select class="ingr-unit"><option>g</option><option>ml</option><option>tbsp</option><option>tsp</option><option>cup</option><option>pcs</option></select><input class="ingr-name" placeholder="ingredient..." /><button class="del-btn" onclick="delRow(this)">×</button>`
+  list.appendChild(row)
+}
+function addStep() {
+  const list = document.getElementById('steps-list')
+  const n = list.children.length + 1
+  const row = document.createElement('div'); row.className = 'step-row'
+  row.innerHTML = `<div class="step-num-badge">${n}</div><textarea class="step-textarea" placeholder="Describe this step..."></textarea><button class="del-btn" onclick="delRow(this);renumber()" style="margin-top:8px;">×</button>`
+  list.appendChild(row)
+}
+function delRow(btn) { btn.closest('.ingr-row, .step-row').remove() }
+function renumber() {
+  document.querySelectorAll('.step-num-badge').forEach((b, i) => b.textContent = i + 1)
+}
+function toggleTag(el) { el.classList.toggle('sel') }
+function toggleFollow(btn) {
+  const f = btn.classList.toggle('followed')
+  btn.textContent = f ? 'Following' : 'Follow'
+  btn.style.color = f ? 'var(--flame)' : ''
+  btn.style.borderColor = f ? 'rgba(216,90,48,0.3)' : ''
+}
+</script>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+const SUPABASE_URL = 'https://ifsaasfsapbkufvgjyzs.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlmc2Fhc2ZzYXBia3VmdmdqeXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNzQxNjAsImV4cCI6MjA4OTk1MDE2MH0.CGyqmFhq0KVwISbcJnF-R1Vvh1knBOa24OG6Pt-HAKI'
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+
+const { data: { user } } = await supabase.auth.getUser()
+
+// URL 파라미터에서 레시피 ID 추출
+const params = new URLSearchParams(location.search)
+const recipeId = params.get('id')
+
+// ── 레시피 상세 불러오기 (id 파라미터 있을 때) ──
+window.loadRecipeDetail = async function() {
+  if (!recipeId) return
+  const { data: r } = await supabase
+    .from('recipes')
+    .select('*, profiles(id, username)')
+    .eq('id', recipeId)
+    .single()
+  if (!r) return
+
+  document.getElementById('d-title').textContent = r.title
+  document.querySelector('.detail-desc').textContent = r.description || ''
+  document.querySelector('.author-name').textContent = r.profiles?.username || ''
+  const initials = (r.profiles?.username || 'U').slice(0,2).toUpperCase()
+  document.querySelector('.author-avatar').textContent = initials
+
+  // 통계 업데이트
+  const stats = document.querySelectorAll('.stat-val')
+  if (stats[0]) stats[0].textContent = r.time_minutes || '-'
+  if (stats[2]) stats[2].textContent = r.difficulty || '-'
+
+  // 좋아요/저장 상태
+  if (user) {
+    const [{ data: like }, { data: save }] = await Promise.all([
+      supabase.from('likes').select('id').eq('user_id', user.id).eq('recipe_id', recipeId).single(),
+      supabase.from('saves').select('id').eq('user_id', user.id).eq('recipe_id', recipeId).single()
+    ])
+    const likeBtn = document.querySelector('.act-btn')
+    if (like) likeBtn.classList.add('liked')
+    const saveBtn = document.querySelector('.save-btn')
+    if (save) saveBtn.textContent = '🔒'
+  }
+
+  // 좋아요 수
+  const { count: likeCount } = await supabase
+    .from('likes').select('*', { count: 'exact', head: true })
+    .eq('recipe_id', recipeId)
+  const likeBtn = document.querySelector('.act-btn')
+  likeBtn.innerHTML = `<span>${likeBtn.classList.contains('liked') ? '♥' : '♡'}</span> ${likeCount || 0}`
+
+  // 댓글 불러오기
+  loadComments()
+}
+
+// id가 있으면 자동으로 detail 모드로 전환
+if (recipeId) {
+  setMode('detail', document.querySelectorAll('.mode-btn')[1])
+}
+
+// ── 좋아요 토글 ──
+window.toggleLike = async function(btn) {
+  if (!user) { location.href = 'simmers-auth.html'; return }
+  if (!recipeId) return
+  const isLiked = btn.classList.contains('liked')
+  const count = parseInt(btn.textContent.trim().split(/\s+/).pop()) || 0
+  btn.classList.toggle('liked')
+  btn.innerHTML = `<span>${isLiked ? '♡' : '♥'}</span> ${isLiked ? count - 1 : count + 1}`
+
+  if (isLiked) {
+    await supabase.from('likes').delete().eq('user_id', user.id).eq('recipe_id', recipeId)
+  } else {
+    await supabase.from('likes').insert({ user_id: user.id, recipe_id: recipeId })
+  }
+}
+
+// ── 저장 토글 ──
+window.toggleSave = async function(btn) {
+  if (!user) { location.href = 'simmers-auth.html'; return }
+  if (!recipeId) return
+  const isSaved = btn.textContent === '🔒'
+  btn.textContent = isSaved ? '🔖' : '🔒'
+
+  if (isSaved) {
+    await supabase.from('saves').delete().eq('user_id', user.id).eq('recipe_id', recipeId)
+  } else {
+    await supabase.from('saves').insert({ user_id: user.id, recipe_id: recipeId })
+    // 레시피 작성자에게 알림
+    const { data: recipe } = await supabase.from('recipes').select('user_id').eq('id', recipeId).single()
+    const { data: me } = await supabase.from('profiles').select('username').eq('id', user.id).single()
+    if (recipe) await supabase.from('notifications').insert({
+      user_id: recipe.user_id, actor_id: user.id, type: 'save',
+      recipe_id: recipeId,
+      message: `<strong>${me?.username || 'Someone'}</strong> saved your recipe`,
+      is_read: false
+    })
+  }
+}
+
+// ── 댓글 불러오기 ──
+async function loadComments() {
+  const { data: comments } = await supabase
+    .from('comments')
+    .select('*, profiles(username)')
+    .eq('recipe_id', recipeId)
+    .order('created_at', { ascending: false })
+    .limit(20)
+
+  const list = document.getElementById('comments-list')
+  list.innerHTML = ''
+  const avatarColors = ['#EEEDFE','#E1F5EE','#FAEEDA','#FAECE7']
+  const textColors = ['#534AB7','#0F6E56','#854F0B','#D85A30']
+
+  comments?.forEach((c, i) => {
+    const ai = i % 4
+    const username = c.profiles?.username || 'unknown'
+    const initials = username.slice(0,2).toUpperCase()
+    const timeAgo = getTimeAgo(c.created_at)
+    const el = document.createElement('div')
+    el.className = 'comment'
+    el.innerHTML = `
+      <div class="comment-avatar" style="background:${avatarColors[ai]};color:${textColors[ai]};">${initials}</div>
+      <div class="comment-body">
+        <div><span class="comment-name">${username}</span><span class="comment-time">${timeAgo}</span></div>
+        <div class="comment-text">${c.content}</div>
+      </div>`
+    list.appendChild(el)
+  })
+}
+
+// ── 댓글 작성 ──
+window.postComment = async function() {
+  if (!user) { location.href = 'simmers-auth.html'; return }
+  if (!recipeId) return
+  const input = document.getElementById('comment-in')
+  const content = input.value.trim()
+  if (!content) return
+
+  const { data: profile } = await supabase
+    .from('profiles').select('username').eq('id', user.id).single()
+
+  const { error } = await supabase.from('comments').insert({
+    user_id: user.id,
+    recipe_id: recipeId,
+    content
+  })
+  if (error) return
+
+  // 레시피 작성자에게 알림
+  const { data: recipe } = await supabase.from('recipes').select('user_id').eq('id', recipeId).single()
+  if (recipe) await supabase.from('notifications').insert({
+    user_id: recipe.user_id, actor_id: user.id, type: 'comment',
+    recipe_id: recipeId,
+    message: `<strong>${profile?.username || 'Someone'}</strong> commented on your recipe`,
+    is_read: false
+  })
+
+  // 낙관적 UI
+  const list = document.getElementById('comments-list')
+  const el = document.createElement('div'); el.className = 'comment'
+  const username = profile?.username || 'me'
+  el.innerHTML = `
+    <div class="comment-avatar" style="background:var(--cream);color:var(--flame);">${username.slice(0,2).toUpperCase()}</div>
+    <div class="comment-body">
+      <div><span class="comment-name">${username}</span><span class="comment-time">just now</span></div>
+      <div class="comment-text">${content}</div>
+    </div>`
+  list.prepend(el)
+  input.value = ''
+}
+
+// ── Publish 버튼 (레시피 저장) ──
+window.publishRecipe = async function() {
+  if (!user) { location.href = 'simmers-auth.html'; return }
+  const title = document.getElementById('w-title').value.trim()
+  if (!title) { alert('레시피 제목을 입력해주세요!'); return }
+
+  const category = document.querySelector('.form-select')?.value
+  const difficulty = document.querySelectorAll('.form-select')[1]?.value
+  const timeMinutes = parseInt(document.querySelector('.form-input-sm')?.value) || null
+
+  const ingredients = [...document.querySelectorAll('.ingr-row')].map(row => {
+    const amount = row.querySelector('.ingr-amount')?.value
+    const unit = row.querySelector('.ingr-unit')?.value
+    const name = row.querySelector('.ingr-name')?.value
+    return `${amount} ${unit} ${name}`.trim()
+  }).filter(Boolean)
+
+  const steps = [...document.querySelectorAll('.step-textarea')].map(t => t.value.trim()).filter(Boolean)
+  const tags = [...document.querySelectorAll('.tag-chip.sel')].map(t => t.textContent)
+
+  // 커버 이미지 업로드
+  let cover_url = null
+  const fileInput = document.getElementById('cover-file-input')
+  if (fileInput?.files[0]) {
+    const file = fileInput.files[0]
+    const ext = file.name.split('.').pop()
+    const path = `${user.id}/${Date.now()}.${ext}`
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('images')
+      .upload(path, file, { upsert: true })
+    if (uploadError) {
+      alert('이미지 업로드 실패: ' + uploadError.message); return
+    }
+    const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(path)
+    cover_url = publicUrl
+  }
+
+  const { data, error } = await supabase.from('recipes').insert({
+    user_id: user.id,
+    title,
+    category,
+    difficulty,
+    time_minutes: timeMinutes,
+    ingredients,
+    steps,
+    tags,
+    cover_url
+  }).select().single()
+
+  if (error) { alert('저장 실패: ' + error.message); return }
+  alert('레시피가 게시됐어요! 🎉')
+  location.href = 'simmers-feed.html'
+}
+
+function getTimeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const min = Math.floor(diff / 60000)
+  if (min < 60) return `${min}m ago`
+  const hr = Math.floor(min / 60)
+  if (hr < 24) return `${hr}h ago`
+  return `${Math.floor(hr / 24)}d ago`
+}
+
+// ── 알림 시스템 ──
+window.toggleNotifPanel = function() {
+  const panel = document.getElementById('notif-panel')
+  panel.classList.toggle('open')
+  if (panel.classList.contains('open')) loadNotifications()
+}
+document.addEventListener('click', e => {
+  const wrap = document.querySelector('.notif-wrap')
+  if (wrap && !wrap.contains(e.target)) document.getElementById('notif-panel')?.classList.remove('open')
+})
+const typeIcon = { like:'♥', comment:'💬', follow:'👤', save:'🔖' }
+const typeColor = { like:'#EEEDFE', comment:'#FAECE7', follow:'#E1F5EE', save:'#FAEEDA' }
+const typeTextColor = { like:'#534AB7', comment:'#D85A30', follow:'#0F6E56', save:'#854F0B' }
+
+window.loadNotifications = async function() {
+  if (!user) return
+  const { data: notifs } = await supabase
+    .from('notifications')
+    .select('*, actor:profiles!notifications_actor_id_fkey(username)')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(30)
+  const list = document.getElementById('notif-list')
+  const badge = document.getElementById('notif-badge')
+  if (!notifs || notifs.length === 0) {
+    list.innerHTML = '<div class="notif-empty">No notifications yet 🔔</div>'
+    return
+  }
+  const unreadCount = notifs.filter(n => !n.is_read).length
+  if (unreadCount > 0) { badge.textContent = unreadCount > 9 ? '9+' : unreadCount; badge.classList.add('show') }
+  list.innerHTML = ''
+  notifs.forEach(n => {
+    const actor = n.actor?.username || 'Someone'
+    const t = n.type
+    const el = document.createElement('div')
+    el.className = `notif-item ${n.is_read ? '' : 'unread'}`
+    el.dataset.id = n.id
+    el.onclick = () => markRead(n.id, n.recipe_id)
+    el.innerHTML = `
+      <div style="position:relative;display:flex;flex-direction:column;align-items:center;">
+        <div class="notif-avatar" style="background:${typeColor[t]};color:${typeTextColor[t]};">${actor.slice(0,2).toUpperCase()}</div>
+        <div class="notif-icon" style="background:${typeColor[t]};color:${typeTextColor[t]};">${typeIcon[t]}</div>
+      </div>
+      <div class="notif-body">
+        <div class="notif-text">${n.message || `<strong>${actor}</strong> interacted with your content`}</div>
+        <div class="notif-time">${getTimeAgo(n.created_at)}</div>
+      </div>
+      ${!n.is_read ? '<div class="notif-dot"></div>' : ''}`
+    list.appendChild(el)
+  })
+}
+window.markRead = async function(id, recipeId) {
+  await supabase.from('notifications').update({ is_read: true }).eq('id', id)
+  document.querySelector(`[data-id="${id}"]`)?.classList.remove('unread')
+  document.querySelector(`[data-id="${id}"] .notif-dot`)?.remove()
+  updateBadge()
+  if (recipeId) location.href = `simmers-recipe.html?id=${recipeId}`
+}
+window.markAllRead = async function() {
+  if (!user) return
+  await supabase.from('notifications').update({ is_read: true }).eq('user_id', user.id)
+  document.querySelectorAll('.notif-item').forEach(el => { el.classList.remove('unread'); el.querySelector('.notif-dot')?.remove() })
+  updateBadge()
+}
+function updateBadge() {
+  const unread = document.querySelectorAll('.notif-item.unread').length
+  const badge = document.getElementById('notif-badge')
+  if (unread > 0) { badge.textContent = unread > 9 ? '9+' : unread; badge.classList.add('show') }
+  else badge.classList.remove('show')
+}
+if (user) loadNotifications()
+
+</script>
+</body>
+</html>

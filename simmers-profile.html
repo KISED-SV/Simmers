@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Simmers — Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+:root {
+  --flame:#D85A30;--amber:#EF9F27;--peach:#F0997B;--cream:#FAECE7;
+  --dark:#1A1108;--mid:#5C3A1E;--muted:#A07850;
+  --border:rgba(26,17,8,0.08);--white:#FDFAF7;--surface:#F7F3EE;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--surface);color:var(--dark);font-family:'DM Sans',sans-serif;min-height:100vh;}
+.layout{display:grid;grid-template-columns:240px 1fr;min-height:100vh;max-width:1200px;margin:0 auto;}
+.sidebar{padding:28px 20px;border-right:1px solid var(--border);position:sticky;top:0;height:100vh;display:flex;flex-direction:column;gap:6px;background:var(--white);}
+.logo{font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--dark);margin-bottom:28px;padding:0 8px;}
+.logo span{color:var(--flame);}
+.nav-item{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;font-size:14px;color:var(--muted);cursor:pointer;transition:background .15s,color .15s;text-decoration:none;}
+.nav-item:hover{background:var(--cream);color:var(--dark);}
+.nav-item.active{background:var(--cream);color:var(--flame);font-weight:500;}
+.post-btn{margin-top:auto;background:var(--flame);color:var(--white);border:none;border-radius:12px;padding:13px;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:background .2s;}
+.post-btn:hover{background:var(--mid);}
+/* 알림 벨 */
+.notif-wrap{position:relative;margin-top:4px;}
+.notif-btn{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:12px;font-size:14px;color:var(--muted);cursor:pointer;transition:background .15s,color .15s;width:100%;border:none;background:none;font-family:"DM Sans",sans-serif;}
+.notif-btn:hover{background:var(--cream);color:var(--dark);}
+.notif-badge{background:var(--flame);color:#fff;font-size:10px;font-weight:700;border-radius:100px;padding:1px 6px;min-width:18px;text-align:center;display:none;}
+.notif-badge.show{display:inline-block;}
+.notif-panel{display:none;position:absolute;left:100%;top:0;margin-left:12px;width:320px;background:var(--white);border:1px solid var(--border);border-radius:16px;box-shadow:0 8px 32px rgba(26,17,8,0.12);z-index:200;overflow:hidden;}
+.notif-panel.open{display:block;}
+.notif-header{display:flex;align-items:center;justify-content:space-between;padding:16px 18px 12px;border-bottom:1px solid var(--border);}
+.notif-title{font-family:"Fraunces",serif;font-size:16px;font-weight:600;color:var(--dark);}
+.notif-read-all{font-size:12px;color:var(--flame);cursor:pointer;border:none;background:none;font-family:"DM Sans",sans-serif;}
+.notif-list{max-height:380px;overflow-y:auto;}
+.notif-item{display:flex;align-items:flex-start;gap:12px;padding:13px 18px;cursor:pointer;transition:background .15s;border-bottom:1px solid var(--border);}
+.notif-item:last-child{border-bottom:none;}
+.notif-item:hover{background:var(--surface);}
+.notif-item.unread{background:var(--cream);}
+.notif-avatar{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex-shrink:0;}
+.notif-icon{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;margin-top:-6px;margin-left:-14px;flex-shrink:0;border:2px solid var(--white);}
+.notif-body{flex:1;min-width:0;}
+.notif-text{font-size:13px;color:var(--dark);line-height:1.4;}
+.notif-text strong{font-weight:500;}
+.notif-time{font-size:11px;color:var(--muted);margin-top:3px;}
+.notif-empty{padding:32px 18px;text-align:center;color:var(--muted);font-size:13px;}
+.notif-dot{width:7px;height:7px;border-radius:50%;background:var(--flame);flex-shrink:0;margin-top:6px;}
+.main{padding:32px 40px;max-width:780px;}
+
+/* PROFILE HEADER */
+.profile-header{background:var(--white);border:1px solid var(--border);border-radius:20px;padding:28px;margin-bottom:24px;display:flex;align-items:flex-start;gap:20px;}
+.profile-avatar{width:80px;height:80px;border-radius:50%;background:var(--cream);color:var(--flame);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:500;font-family:'Fraunces',serif;flex-shrink:0;overflow:hidden;}
+.profile-avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;}
+.profile-info{flex:1;}
+.profile-name{font-family:'Fraunces',serif;font-size:22px;font-weight:700;color:var(--dark);margin-bottom:2px;}
+.profile-handle{font-size:14px;color:var(--muted);margin-bottom:10px;}
+.profile-bio{font-size:13px;color:var(--mid);line-height:1.6;margin-bottom:14px;max-width:420px;}
+.profile-stats{display:flex;gap:20px;}
+.pstat{text-align:center;cursor:pointer;}
+.pstat-val{font-size:18px;font-weight:500;color:var(--dark);font-family:'Fraunces',serif;}
+.pstat-label{font-size:11px;color:var(--muted);}
+.profile-actions{display:flex;gap:8px;margin-left:auto;}
+.edit-btn{padding:9px 20px;border:1px solid var(--border);border-radius:100px;background:transparent;color:var(--dark);font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.edit-btn:hover{border-color:var(--flame);color:var(--flame);}
+.signout-btn{padding:9px 20px;border:1px solid var(--border);border-radius:100px;background:transparent;color:var(--muted);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .15s;}
+.signout-btn:hover{color:var(--dark);}
+
+/* TABS */
+.tab-row{display:flex;gap:0;border-bottom:1px solid var(--border);margin-bottom:24px;}
+.tab{padding:10px 20px;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .15s;}
+.tab.active{color:var(--flame);border-bottom-color:var(--flame);}
+.tab:hover:not(.active){color:var(--dark);}
+
+/* TAB PANELS */
+.tab-panel{display:none;}
+.tab-panel.active{display:block;}
+
+/* RECIPE GRID */
+.recipe-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.recipe-card{background:var(--white);border:1px solid var(--border);border-radius:14px;overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s;}
+.recipe-card:hover{transform:translateY(-3px);box-shadow:0 8px 24px rgba(216,90,48,0.1);}
+.recipe-thumb{height:120px;display:flex;align-items:center;justify-content:center;font-size:44px;position:relative;}
+.recipe-body{padding:10px 12px;}
+.recipe-name{font-size:12px;font-weight:500;color:var(--dark);margin-bottom:3px;}
+.recipe-meta{font-size:10px;color:var(--muted);display:flex;gap:6px;}
+.recipe-likes{position:absolute;bottom:8px;right:10px;font-size:11px;background:rgba(253,250,247,0.9);padding:3px 8px;border-radius:100px;color:var(--mid);}
+
+/* ACTIVITY */
+.activity-list{display:flex;flex-direction:column;gap:12px;}
+.activity-item{display:flex;align-items:center;gap:12px;background:var(--white);border:1px solid var(--border);border-radius:12px;padding:12px 16px;}
+.act-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;}
+.act-text{font-size:13px;color:var(--dark);line-height:1.5;}
+.act-time{margin-left:auto;font-size:11px;color:var(--muted);white-space:nowrap;}
+
+/* EDIT MODAL */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(26,17,8,0.4);z-index:100;align-items:center;justify-content:center;}
+.modal-bg.open{display:flex;}
+.modal{background:var(--white);border-radius:20px;padding:28px;width:100%;max-width:420px;margin:20px;}
+.modal-title{font-family:'Fraunces',serif;font-size:20px;font-weight:600;color:var(--dark);margin-bottom:20px;}
+.modal-field{margin-bottom:14px;}
+.modal-label{font-size:11px;font-weight:500;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.04em;}
+.modal-input{width:100%;padding:10px 14px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;color:var(--dark);background:var(--surface);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .2s;}
+.modal-input:focus{border-color:var(--flame);}
+.modal-actions{display:flex;gap:10px;margin-top:20px;}
+.modal-save{flex:1;padding:11px;background:var(--flame);color:var(--white);border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;}
+.modal-cancel{flex:1;padding:11px;background:transparent;color:var(--dark);border:1px solid var(--border);border-radius:10px;font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;}
+
+@media(max-width:900px){.layout{grid-template-columns:1fr;}.sidebar{display:none;}.main{padding:20px;}.recipe-grid{grid-template-columns:repeat(2,1fr);}.profile-header{flex-direction:column;}.profile-actions{margin-left:0;}}
+</style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="logo">Simmer<span>s</span></div>
+    <a class="nav-item" href="simmers-feed.html">⊞ &nbsp;Feed</a>
+    <a class="nav-item" href="simmers-ai-tools-LIVE.html">✦ &nbsp;AI Tools</a>
+    <a class="nav-item" href="simmers-explore.html">🔍 &nbsp;Explore</a>
+    <a class="nav-item" href="simmers-saved.html">🔖 &nbsp;Saved</a>
+    <a class="nav-item active" href="simmers-profile.html">○ &nbsp;Profile</a>
+        <div class="notif-wrap">
+      <button class="notif-btn" onclick="toggleNotifPanel()">
+        <span>🔔</span> Notifications
+        <span class="notif-badge" id="notif-badge"></span>
+      </button>
+      <div class="notif-panel" id="notif-panel">
+        <div class="notif-header">
+          <div class="notif-title">Notifications</div>
+          <button class="notif-read-all" onclick="markAllRead()">Mark all read</button>
+        </div>
+        <div class="notif-list" id="notif-list">
+          <div class="notif-empty">Loading...</div>
+        </div>
+      </div>
+    </div>
+    <button class="post-btn" onclick="location.href='simmers-recipe.html'">+ Post a Recipe</button>
+  </aside>
+
+  <main class="main">
+    <!-- PROFILE HEADER -->
+    <div class="profile-header">
+      <div class="profile-avatar" id="avatar-display" onclick="document.getElementById('avatar-file-input').click()" style="cursor:pointer;" title="클릭해서 사진 변경">JK</div>
+      <input type="file" id="avatar-file-input" accept="image/*" style="display:none" onchange="handleAvatarUpload(event)" />
+      <div class="profile-info">
+        <div class="profile-name" id="name-display">Jamie Kim</div>
+        <div class="profile-handle" id="handle-display">@jamie_cooks</div>
+        <div class="profile-bio" id="bio-display">Home cook obsessed with fusion flavors. Making weeknight dinners exciting one recipe at a time. 🍜</div>
+        <div class="profile-stats">
+          <div class="pstat"><div class="pstat-val">12</div><div class="pstat-label">Recipes</div></div>
+          <div class="pstat"><div class="pstat-val">284</div><div class="pstat-label">Followers</div></div>
+          <div class="pstat"><div class="pstat-val">91</div><div class="pstat-label">Following</div></div>
+        </div>
+      </div>
+      <div class="profile-actions">
+        <button class="edit-btn" onclick="openEdit()">Edit profile</button>
+        <button class="signout-btn" onclick="signOut()">Sign out</button>
+      </div>
+    </div>
+
+    <!-- TABS -->
+    <div class="tab-row">
+      <div class="tab active" onclick="setTab(this,'recipes')">Recipes</div>
+      <div class="tab" onclick="setTab(this,'liked')">Liked</div>
+      <div class="tab" onclick="setTab(this,'activity')">Activity</div>
+    </div>
+
+    <!-- RECIPES TAB -->
+    <div class="tab-panel active" id="tab-recipes">
+      <div class="recipe-grid">
+        <div class="recipe-card">
+          <div class="recipe-thumb" style="background:linear-gradient(135deg,#AFA9EC,#9FE1CB);">🍜<div class="recipe-likes">♥ 284</div></div>
+          <div class="recipe-body"><div class="recipe-name">Garlic Butter Pasta</div><div class="recipe-meta"><span>15 min</span><span>Easy</span></div></div>
+        </div>
+        <div class="recipe-card">
+          <div class="recipe-thumb" style="background:linear-gradient(135deg,#F0997B,#FAC775);">🌮<div class="recipe-likes">♥ 157</div></div>
+          <div class="recipe-body"><div class="recipe-name">Korean Chicken Tacos</div><div class="recipe-meta"><span>30 min</span><span>Medium</span></div></div>
+        </div>
+        <div class="recipe-card">
+          <div class="recipe-thumb" style="background:linear-gradient(135deg,#C0DD97,#5DCAA5);">🥗<div class="recipe-likes">♥ 93</div></div>
+          <div class="recipe-body"><div class="recipe-name">Miso Tahini Salad</div><div class="recipe-meta"><span>10 min</span><span>Easy</span></div></div>
+        </div>
+        <div class="recipe-card">
+          <div class="recipe-thumb" style="background:linear-gradient(135deg,#F09595,#E24B4A);">🍚<div class="recipe-likes">♥ 189</div></div>
+          <div class="recipe-body"><div class="recipe-name">Kimchi Fried Rice</div><div class="recipe-meta"><span>15 min</span><span>Easy</span></div></div>
+        </div>
+        <div class="recipe-card" style="border-style:dashed;cursor:pointer;" onclick="location.href='simmers-recipe.html'">
+          <div class="recipe-thumb" style="background:var(--surface);font-size:32px;">+</div>
+          <div class="recipe-body"><div class="recipe-name" style="color:var(--muted);">Add new recipe</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LIKED TAB -->
+    <div class="tab-panel" id="tab-liked">
+      <div class="recipe-grid">
+        <div class="recipe-card">
+          <div class="recipe-thumb" style="background:linear-gradient(135deg,#B4B2A9,#444441);">🍫<div class="recipe-likes">♥ 412</div></div>
+          <div class="recipe-body"><div class="recipe-name">Chocolate Lava Cake</div><div class="recipe-meta"><span>25 min</span><span>Medium</span></div></div>
+        </div>
+        <div class="recipe-card">
+          <div class="recipe-thumb" style="background:linear-gradient(135deg,#85B7EB,#378ADD);">🍣<div class="recipe-likes">♥ 328</div></div>
+          <div class="recipe-body"><div class="recipe-name">Salmon Sushi Bowl</div><div class="recipe-meta"><span>20 min</span><span>Easy</span></div></div>
+        </div>
+        <div class="recipe-card">
+          <div class="recipe-thumb" style="background:linear-gradient(135deg,#FAC775,#D85A30);">🍕<div class="recipe-likes">♥ 543</div></div>
+          <div class="recipe-body"><div class="recipe-name">Margherita Pizza</div><div class="recipe-meta"><span>40 min</span><span>Medium</span></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIVITY TAB -->
+    <div class="tab-panel" id="tab-activity">
+      <div class="activity-list">
+        <div class="activity-item">
+          <div class="act-icon" style="background:#EEEDFE;">♥</div>
+          <div class="act-text"><strong>pasta_king</strong> liked your Garlic Butter Pasta</div>
+          <div class="act-time">2h ago</div>
+        </div>
+        <div class="activity-item">
+          <div class="act-icon" style="background:#E1F5EE;">👤</div>
+          <div class="act-text"><strong>soyeon_eats</strong> started following you</div>
+          <div class="act-time">5h ago</div>
+        </div>
+        <div class="activity-item">
+          <div class="act-icon" style="background:#FAECE7;">💬</div>
+          <div class="act-text"><strong>wok_master</strong> commented on your Korean Chicken Tacos: "This looks amazing!"</div>
+          <div class="act-time">1d ago</div>
+        </div>
+        <div class="activity-item">
+          <div class="act-icon" style="background:#FAEEDA;">🔖</div>
+          <div class="act-text"><strong>taco_rosa</strong> saved your Kimchi Fried Rice</div>
+          <div class="act-time">2d ago</div>
+        </div>
+        <div class="activity-item">
+          <div class="act-icon" style="background:#EEEDFE;">♥</div>
+          <div class="act-text"><strong>miso_recipes</strong> liked your Miso Tahini Salad</div>
+          <div class="act-time">3d ago</div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- EDIT MODAL -->
+<div class="modal-bg" id="edit-modal" onclick="closeEdit(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-title">Edit profile</div>
+    <div class="modal-field">
+      <div class="modal-label">Display name</div>
+      <input class="modal-input" id="edit-name" value="Jamie Kim" />
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">Username</div>
+      <input class="modal-input" id="edit-handle" value="@jamie_cooks" />
+    </div>
+    <div class="modal-field">
+      <div class="modal-label">Bio</div>
+      <input class="modal-input" id="edit-bio" value="Home cook obsessed with fusion flavors." />
+    </div>
+    <div class="modal-actions">
+      <button class="modal-cancel" onclick="closeEdit()">Cancel</button>
+      <button class="modal-save" onclick="saveEdit()">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function setTab(el, id) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'))
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'))
+  el.classList.add('active')
+  document.getElementById('tab-' + id).classList.add('active')
+}
+function openEdit() {
+  document.getElementById('edit-modal').classList.add('open')
+}
+function closeEdit(e) {
+  if (!e || e.target === document.getElementById('edit-modal')) {
+    document.getElementById('edit-modal').classList.remove('open')
+  }
+}
+</script>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+const SUPABASE_URL = 'https://ifsaasfsapbkufvgjyzs.supabase.co'
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlmc2Fhc2ZzYXBia3VmdmdqeXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNzQxNjAsImV4cCI6MjA4OTk1MDE2MH0.CGyqmFhq0KVwISbcJnF-R1Vvh1knBOa24OG6Pt-HAKI'
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+
+const { data: { user } } = await supabase.auth.getUser()
+if (!user) { location.href = 'simmers-auth.html' }
+
+// ── 아바타 이미지 업로드 ──
+window.handleAvatarUpload = async function(e) {
+  if (!user) return
+  const file = e.target.files[0]
+  if (!file) return
+  if (file.size > 5 * 1024 * 1024) { alert('이미지는 5MB 이하만 가능해요.'); return }
+
+  const ext = file.name.split('.').pop()
+  const path = `${user.id}/avatar.${ext}`
+  const { error: uploadError } = await supabase.storage
+    .from('images')
+    .upload(path, file, { upsert: true })
+  if (uploadError) { alert('업로드 실패: ' + uploadError.message); return }
+
+  const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(path)
+
+  await supabase.from('profiles').update({ avatar_url: publicUrl }).eq('id', user.id)
+
+  // 즉시 UI 반영
+  const avatarEl = document.getElementById('avatar-display')
+  avatarEl.innerHTML = `<img src="${publicUrl}?t=${Date.now()}" />`
+}
+
+// ── 프로필 + 레시피 불러오기 ──
+async function loadProfile() {
+  const [
+    { data: profile },
+    { data: recipes },
+    { count: followerCount },
+    { count: followingCount },
+    { data: likes }
+  ] = await Promise.all([
+    supabase.from('profiles').select('*').eq('id', user.id).single(),
+    supabase.from('recipes').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
+    supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', user.id),
+    supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', user.id),
+    supabase.from('likes').select('recipe_id, recipes(id, title, category, difficulty, time_minutes, cover_emoji)').eq('user_id', user.id)
+  ])
+
+  // 프로필 헤더 업데이트
+  const username = profile?.username || user.email?.split('@')[0] || 'User'
+  const bio = profile?.bio || ''
+  const initials = username.slice(0,2).toUpperCase()
+
+  document.getElementById('name-display').textContent = username
+  document.getElementById('handle-display').textContent = '@' + username
+  document.getElementById('bio-display').textContent = bio
+
+  const avatarEl = document.getElementById('avatar-display')
+  if (profile?.avatar_url) {
+    avatarEl.innerHTML = `<img src="${profile.avatar_url}" />`
+  } else {
+    avatarEl.textContent = initials
+  }
+
+  // 모달 초기값 세팅
+  document.getElementById('edit-name').value = username
+  document.getElementById('edit-handle').value = username
+  document.getElementById('edit-bio').value = bio
+
+  // 통계
+  document.querySelectorAll('.pstat-val')[0].textContent = recipes?.length || 0
+  document.querySelectorAll('.pstat-val')[1].textContent = followerCount || 0
+  document.querySelectorAll('.pstat-val')[2].textContent = followingCount || 0
+
+  // 레시피 탭 렌더
+  renderRecipes(recipes || [])
+
+  // 좋아요 탭 렌더
+  const likedRecipes = likes?.map(l => l.recipes).filter(Boolean) || []
+  renderLikedRecipes(likedRecipes)
+}
+
+const gradients = [
+  'linear-gradient(135deg,#AFA9EC,#9FE1CB)',
+  'linear-gradient(135deg,#F0997B,#FAC775)',
+  'linear-gradient(135deg,#C0DD97,#5DCAA5)',
+  'linear-gradient(135deg,#F09595,#E24B4A)',
+  'linear-gradient(135deg,#85B7EB,#378ADD)',
+  'linear-gradient(135deg,#FAC775,#D85A30)',
+]
+
+function renderRecipes(recipes) {
+  const grid = document.querySelector('#tab-recipes .recipe-grid')
+  // 기존 목 카드 제거, 새 레시피 추가 버튼은 유지
+  const addCard = grid.querySelector('[style*="dashed"]')
+  grid.innerHTML = ''
+
+  recipes.forEach((r, i) => {
+    const card = document.createElement('div')
+    card.className = 'recipe-card'
+    card.onclick = () => location.href = `simmers-recipe.html?id=${r.id}`
+    card.innerHTML = `
+      <div class="recipe-thumb" style="background:${gradients[i % gradients.length]};">
+        ${r.cover_emoji || '🍽️'}
+        <div class="recipe-likes">♥ 0</div>
+      </div>
+      <div class="recipe-body">
+        <div class="recipe-name">${r.title}</div>
+        <div class="recipe-meta">
+          ${r.time_minutes ? `<span>${r.time_minutes} min</span>` : ''}
+          ${r.difficulty ? `<span>${r.difficulty}</span>` : ''}
+        </div>
+      </div>`
+    grid.appendChild(card)
+  })
+
+  // 좋아요 수 비동기 업데이트
+  recipes.forEach(async (r, i) => {
+    const { count } = await supabase
+      .from('likes').select('*', { count: 'exact', head: true }).eq('recipe_id', r.id)
+    const cards = grid.querySelectorAll('.recipe-card')
+    const likeEl = cards[i]?.querySelector('.recipe-likes')
+    if (likeEl) likeEl.textContent = `♥ ${count || 0}`
+  })
+
+  // 새 레시피 추가 버튼
+  const addCardEl = document.createElement('div')
+  addCardEl.className = 'recipe-card'
+  addCardEl.style.borderStyle = 'dashed'
+  addCardEl.style.cursor = 'pointer'
+  addCardEl.onclick = () => location.href = 'simmers-recipe.html'
+  addCardEl.innerHTML = `
+    <div class="recipe-thumb" style="background:var(--surface);font-size:32px;">+</div>
+    <div class="recipe-body"><div class="recipe-name" style="color:var(--muted);">Add new recipe</div></div>`
+  grid.appendChild(addCardEl)
+}
+
+function renderLikedRecipes(recipes) {
+  const grid = document.querySelector('#tab-liked .recipe-grid')
+  grid.innerHTML = ''
+  if (recipes.length === 0) {
+    grid.innerHTML = '<div style="color:var(--muted);font-size:13px;padding:20px 0;">No liked recipes yet.</div>'
+    return
+  }
+  recipes.forEach((r, i) => {
+    const card = document.createElement('div')
+    card.className = 'recipe-card'
+    card.onclick = () => location.href = `simmers-recipe.html?id=${r.id}`
+    card.innerHTML = `
+      <div class="recipe-thumb" style="background:${gradients[i % gradients.length]};">
+        ${r.cover_emoji || '🍽️'}
+        <div class="recipe-likes">♥</div>
+      </div>
+      <div class="recipe-body">
+        <div class="recipe-name">${r.title}</div>
+        <div class="recipe-meta">
+          ${r.time_minutes ? `<span>${r.time_minutes} min</span>` : ''}
+          ${r.difficulty ? `<span>${r.difficulty}</span>` : ''}
+        </div>
+      </div>`
+    grid.appendChild(card)
+  })
+}
+
+// ── 프로필 편집 저장 ──
+window.saveEdit = async function() {
+  const username = document.getElementById('edit-name').value.trim()
+  const bio = document.getElementById('edit-bio').value.trim()
+  if (!username) return
+
+  const { error } = await supabase.from('profiles').update({ username, bio }).eq('id', user.id)
+  if (error) { alert('저장 실패: ' + error.message); return }
+
+  document.getElementById('name-display').textContent = username
+  document.getElementById('handle-display').textContent = '@' + username
+  document.getElementById('bio-display').textContent = bio
+  const avatarEl2 = document.getElementById('avatar-display')
+  if (!avatarEl2.querySelector('img')) {
+    avatarEl2.textContent = username.slice(0,2).toUpperCase()
+  }
+  closeEdit()
+}
+
+// ── 로그아웃 ──
+window.signOut = async function() {
+  if (confirm('Sign out of Simmers?')) {
+    await supabase.auth.signOut()
+    location.href = 'simmers-auth.html'
+  }
+}
+
+loadProfile()
+
+// ── 알림 시스템 ──
+window.toggleNotifPanel = function() {
+  const panel = document.getElementById('notif-panel')
+  panel.classList.toggle('open')
+  if (panel.classList.contains('open')) loadNotifications()
+}
+document.addEventListener('click', e => {
+  const wrap = document.querySelector('.notif-wrap')
+  if (wrap && !wrap.contains(e.target)) document.getElementById('notif-panel')?.classList.remove('open')
+})
+const typeIcon = { like:'♥', comment:'💬', follow:'👤', save:'🔖' }
+const typeColor = { like:'#EEEDFE', comment:'#FAECE7', follow:'#E1F5EE', save:'#FAEEDA' }
+const typeTextColor = { like:'#534AB7', comment:'#D85A30', follow:'#0F6E56', save:'#854F0B' }
+
+window.loadNotifications = async function() {
+  if (!user) return
+  const { data: notifs } = await supabase
+    .from('notifications')
+    .select('*, actor:profiles!notifications_actor_id_fkey(username)')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(30)
+  const list = document.getElementById('notif-list')
+  const badge = document.getElementById('notif-badge')
+  if (!notifs || notifs.length === 0) {
+    list.innerHTML = '<div class="notif-empty">No notifications yet 🔔</div>'
+    return
+  }
+  const unreadCount = notifs.filter(n => !n.is_read).length
+  if (unreadCount > 0) { badge.textContent = unreadCount > 9 ? '9+' : unreadCount; badge.classList.add('show') }
+  list.innerHTML = ''
+  notifs.forEach(n => {
+    const actor = n.actor?.username || 'Someone'
+    const t = n.type
+    const el = document.createElement('div')
+    el.className = `notif-item ${n.is_read ? '' : 'unread'}`
+    el.dataset.id = n.id
+    el.onclick = () => markRead(n.id, n.recipe_id)
+    el.innerHTML = `
+      <div style="position:relative;display:flex;flex-direction:column;align-items:center;">
+        <div class="notif-avatar" style="background:${typeColor[t]};color:${typeTextColor[t]};">${actor.slice(0,2).toUpperCase()}</div>
+        <div class="notif-icon" style="background:${typeColor[t]};color:${typeTextColor[t]};">${typeIcon[t]}</div>
+      </div>
+      <div class="notif-body">
+        <div class="notif-text">${n.message || `<strong>${actor}</strong> interacted with your content`}</div>
+        <div class="notif-time">${getTimeAgo(n.created_at)}</div>
+      </div>
+      ${!n.is_read ? '<div class="notif-dot"></div>' : ''}`
+    list.appendChild(el)
+  })
+}
+window.markRead = async function(id, recipeId) {
+  await supabase.from('notifications').update({ is_read: true }).eq('id', id)
+  document.querySelector(`[data-id="${id}"]`)?.classList.remove('unread')
+  document.querySelector(`[data-id="${id}"] .notif-dot`)?.remove()
+  updateBadge()
+  if (recipeId) location.href = `simmers-recipe.html?id=${recipeId}`
+}
+window.markAllRead = async function() {
+  if (!user) return
+  await supabase.from('notifications').update({ is_read: true }).eq('user_id', user.id)
+  document.querySelectorAll('.notif-item').forEach(el => { el.classList.remove('unread'); el.querySelector('.notif-dot')?.remove() })
+  updateBadge()
+}
+function updateBadge() {
+  const unread = document.querySelectorAll('.notif-item.unread').length
+  const badge = document.getElementById('notif-badge')
+  if (unread > 0) { badge.textContent = unread > 9 ? '9+' : unread; badge.classList.add('show') }
+  else badge.classList.remove('show')
+}
+if (user) loadNotifications()
+
+</script>
+</body>
+</html>

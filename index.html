@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Simmers — Where recipes come alive.</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,700;1,9..144,300;1,9..144,500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --flame: #D85A30;
+    --amber: #EF9F27;
+    --peach: #F0997B;
+    --cream: #FAECE7;
+    --dark: #1A1108;
+    --mid: #5C3A1E;
+    --muted: #A07850;
+    --white: #FDFAF7;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--white);
+    color: var(--dark);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    overflow-x: hidden;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 48px;
+    background: rgba(253,250,247,0.85);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(216,90,48,0.08);
+  }
+  .nav-logo {
+    font-family: 'Fraunces', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--dark);
+    letter-spacing: -0.5px;
+  }
+  .nav-logo span { color: var(--flame); }
+  .nav-links { display: flex; gap: 32px; align-items: center; }
+  .nav-links a {
+    font-size: 14px;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--dark); }
+  .nav-cta {
+    background: var(--flame);
+    color: var(--white) !important;
+    padding: 9px 20px;
+    border-radius: 100px;
+    font-weight: 500;
+    font-size: 14px !important;
+    transition: background 0.2s, transform 0.15s !important;
+  }
+  .nav-cta:hover { background: var(--mid) !important; transform: translateY(-1px); }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 120px 24px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background:
+      radial-gradient(ellipse 70% 50% at 20% 60%, rgba(240,153,123,0.18) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 80% 30%, rgba(239,159,39,0.13) 0%, transparent 55%),
+      radial-gradient(ellipse 60% 60% at 50% 100%, rgba(216,90,48,0.08) 0%, transparent 60%);
+  }
+
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: var(--cream);
+    border: 1px solid rgba(216,90,48,0.2);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 12px;
+    color: var(--flame);
+    font-weight: 500;
+    margin-bottom: 28px;
+    opacity: 0; animation: fadeUp 0.6s 0.1s forwards;
+  }
+
+  .hero h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(52px, 8vw, 96px);
+    font-weight: 700;
+    line-height: 1.0;
+    letter-spacing: -2px;
+    color: var(--dark);
+    max-width: 800px;
+    opacity: 0; animation: fadeUp 0.7s 0.2s forwards;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--flame);
+  }
+
+  .hero-sub {
+    margin-top: 24px;
+    font-size: 18px;
+    color: var(--muted);
+    max-width: 480px;
+    line-height: 1.7;
+    font-weight: 300;
+    opacity: 0; animation: fadeUp 0.7s 0.35s forwards;
+  }
+
+  .hero-actions {
+    margin-top: 40px;
+    display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+    opacity: 0; animation: fadeUp 0.7s 0.5s forwards;
+  }
+
+  .btn-primary {
+    background: var(--flame);
+    color: var(--white);
+    padding: 14px 32px;
+    border-radius: 100px;
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+    border: none; cursor: pointer;
+    transition: background 0.2s, transform 0.15s;
+    display: inline-block;
+  }
+  .btn-primary:hover { background: var(--mid); transform: translateY(-2px); }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--dark);
+    padding: 14px 32px;
+    border-radius: 100px;
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+    border: 1.5px solid rgba(26,17,8,0.15);
+    transition: border-color 0.2s, transform 0.15s;
+    display: inline-block;
+  }
+  .btn-secondary:hover { border-color: var(--flame); transform: translateY(-2px); }
+
+  .hero-cards {
+    margin-top: 64px;
+    display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+    opacity: 0; animation: fadeUp 0.8s 0.65s forwards;
+  }
+
+  .recipe-chip {
+    background: var(--white);
+    border: 1px solid rgba(26,17,8,0.08);
+    border-radius: 16px;
+    padding: 12px 18px;
+    display: flex; align-items: center; gap: 10px;
+    box-shadow: 0 2px 16px rgba(216,90,48,0.06);
+    font-size: 13px;
+    color: var(--dark);
+    transition: transform 0.2s;
+  }
+  .recipe-chip:hover { transform: translateY(-3px); }
+  .chip-emoji { font-size: 22px; }
+  .chip-name { font-weight: 500; }
+  .chip-meta { font-size: 11px; color: var(--muted); }
+
+  /* FEATURES */
+  .features {
+    padding: 100px 48px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-eyebrow {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--flame);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(32px, 4vw, 52px);
+    font-weight: 500;
+    line-height: 1.15;
+    letter-spacing: -1px;
+    color: var(--dark);
+    max-width: 540px;
+    margin-bottom: 60px;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+  }
+
+  .feature-card {
+    background: var(--white);
+    border: 1px solid rgba(26,17,8,0.07);
+    border-radius: 20px;
+    padding: 28px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .feature-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(216,90,48,0.1); }
+  .feature-card.accent { background: var(--flame); color: var(--white); }
+  .feature-card.accent .feature-title { color: var(--white); }
+  .feature-card.accent .feature-desc { color: rgba(253,250,247,0.75); }
+
+  .feature-icon {
+    width: 44px; height: 44px;
+    border-radius: 12px;
+    background: var(--cream);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    margin-bottom: 18px;
+  }
+  .feature-card.accent .feature-icon { background: rgba(255,255,255,0.15); }
+
+  .feature-title {
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--dark);
+    margin-bottom: 8px;
+    font-family: 'Fraunces', serif;
+  }
+
+  .feature-desc {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  /* HOW IT WORKS */
+  .how {
+    background: var(--cream);
+    padding: 100px 48px;
+  }
+  .how-inner { max-width: 1100px; margin: 0 auto; }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 32px;
+    margin-top: 60px;
+  }
+
+  .step { display: flex; flex-direction: column; gap: 14px; }
+  .step-num {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--flame);
+    color: var(--white);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 500;
+    font-family: 'Fraunces', serif;
+  }
+  .step-title {
+    font-size: 16px; font-weight: 500; color: var(--dark);
+    font-family: 'Fraunces', serif;
+  }
+  .step-desc { font-size: 14px; color: var(--mid); line-height: 1.7; }
+
+  /* CTA */
+  .cta-section {
+    padding: 100px 48px;
+    text-align: center;
+  }
+  .cta-inner { max-width: 600px; margin: 0 auto; }
+  .cta-title {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(36px, 5vw, 60px);
+    font-weight: 700;
+    letter-spacing: -1.5px;
+    line-height: 1.1;
+    color: var(--dark);
+    margin-bottom: 20px;
+  }
+  .cta-title span { color: var(--flame); font-style: italic; }
+  .cta-sub { font-size: 16px; color: var(--muted); margin-bottom: 36px; line-height: 1.7; }
+
+  .email-form {
+    display: flex; gap: 10px; max-width: 420px; margin: 0 auto;
+    flex-wrap: wrap; justify-content: center;
+  }
+  .email-input {
+    flex: 1; min-width: 220px;
+    padding: 13px 20px;
+    border-radius: 100px;
+    border: 1.5px solid rgba(26,17,8,0.12);
+    font-size: 14px;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--dark);
+    background: var(--white);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .email-input:focus { border-color: var(--flame); }
+  .email-input::placeholder { color: var(--muted); }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid rgba(26,17,8,0.07);
+    padding: 32px 48px;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 12px;
+  }
+  .footer-logo {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--dark);
+  }
+  .footer-logo span { color: var(--flame); }
+  .footer-copy { font-size: 12px; color: var(--muted); }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .reveal {
+    opacity: 0; transform: translateY(24px);
+    transition: opacity 0.6s ease, transform 0.6s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* RESPONSIVE */
+  @media (max-width: 600px) {
+    nav { padding: 16px 20px; }
+    .nav-links { display: none; }
+    .features, .cta-section { padding: 60px 20px; }
+    .how { padding: 60px 20px; }
+    footer { padding: 24px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">Simmer<span>s</span></div>
+  <div class="nav-links">
+    <a href="#features">Features</a>
+    <a href="#how">How it works</a>
+    <a href="simmers-ai-tools-LIVE.html">Try AI tools</a>
+    <a href="simmers-auth.html" class="nav-cta">Sign in</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div style="position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;">
+    <div class="hero-badge">🔥 Now in early access</div>
+    <h1>Cook. Share.<br><em>Inspire.</em></h1>
+    <p class="hero-sub">The community where home cooks share their own recipes, post their cooking videos, and let AI do the heavy lifting.</p>
+    <div class="hero-actions">
+      <a href="#join" class="btn-primary">Join the waitlist</a>
+      <a href="simmers-ai-tools-LIVE.html" class="btn-secondary">Try AI tools</a>
+    </div>
+    <div class="hero-cards">
+      <div class="recipe-chip">
+        <span class="chip-emoji">🍜</span>
+        <div>
+          <div class="chip-name">Garlic butter pasta</div>
+          <div class="chip-meta">15 min · Easy</div>
+        </div>
+      </div>
+      <div class="recipe-chip">
+        <span class="chip-emoji">🌮</span>
+        <div>
+          <div class="chip-name">Korean chicken tacos</div>
+          <div class="chip-meta">30 min · Medium</div>
+        </div>
+      </div>
+      <div class="recipe-chip">
+        <span class="chip-emoji">🥗</span>
+        <div>
+          <div class="chip-name">Miso tahini salad</div>
+          <div class="chip-meta">10 min · Easy</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="reveal">
+    <div class="section-eyebrow">Features</div>
+    <h2 class="section-title">Everything a home cook needs, finally in one place.</h2>
+  </div>
+  <div class="features-grid">
+    <div class="feature-card reveal">
+      <div class="feature-icon">📖</div>
+      <div class="feature-title">Recipe feed</div>
+      <div class="feature-desc">Discover recipes from real home cooks around the world. Follow your favorites and build your own cookbook.</div>
+    </div>
+    <div class="feature-card accent reveal">
+      <div class="feature-icon">✦</div>
+      <div class="feature-title">YouTube → Recipe</div>
+      <div class="feature-desc">Link your own YouTube cooking videos and let AI convert them into clean, structured recipes instantly — your content, your recipes.</div>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon">🎬</div>
+      <div class="feature-title">Recipe → Video</div>
+      <div class="feature-desc">Type up your recipe and let AI generate a short cooking video for you. No camera, no editing — just your recipe.</div>
+    </div>
+    <div class="feature-card reveal">
+      <div class="feature-icon">🤝</div>
+      <div class="feature-title">Cook together</div>
+      <div class="feature-desc">Follow friends, leave comments, rate dishes, and build a community around the food you love.</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="how-inner">
+    <div class="reveal">
+      <div class="section-eyebrow">How it works</div>
+      <h2 class="section-title">Turn your cooking videos into recipes in seconds.</h2>
+    </div>
+    <div class="steps">
+      <div class="step reveal">
+        <div class="step-num">1</div>
+        <div class="step-title">Link your own YouTube video</div>
+        <div class="step-desc">Made a cooking video? Drop the link to your own YouTube video into Simmers to get started.</div>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">2</div>
+        <div class="step-title">AI extracts the recipe</div>
+        <div class="step-desc">Our AI watches the video, pulls out all ingredients and steps, and formats them into a clean recipe card.</div>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">3</div>
+        <div class="step-title">Share with the community</div>
+        <div class="step-desc">Post your recipe to your profile, add your own photos or videos, and let others discover your cooking.</div>
+      </div>
+      <div class="step reveal">
+        <div class="step-num">4</div>
+        <div class="step-title">Cook & get inspired</div>
+        <div class="step-desc">Browse your personalized feed, save recipes you love, and build your own digital cookbook over time.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="join">
+  <div class="cta-inner reveal">
+    <h2 class="cta-title">Ready to <span>simmer?</span></h2>
+    <p class="cta-sub">We're launching soon. Join the waitlist and be the first to cook with Simmers.</p>
+    <div class="email-form">
+      <input class="email-input" type="email" placeholder="your@email.com" />
+      <button class="btn-primary" onclick="handleJoin()">Join waitlist</button>
+    </div>
+    <p id="join-msg" style="margin-top:14px;font-size:13px;color:var(--flame);display:none;">🎉 You're on the list! We'll be in touch soon.</p>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">Simmer<span>s</span></div>
+  <div class="footer-copy">© 2026 Simmers. Where recipes come alive.</div>
+</footer>
+
+<script>
+  const reveals = document.querySelectorAll('.reveal');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        setTimeout(() => e.target.classList.add('visible'), i * 80);
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12 });
+  reveals.forEach(el => observer.observe(el));
+
+  function handleJoin() {
+    const input = document.querySelector('.email-input');
+    if (input.value.includes('@')) {
+      document.getElementById('join-msg').style.display = 'block';
+      input.value = '';
+    } else {
+      input.style.borderColor = '#D85A30';
+      setTimeout(() => input.style.borderColor = '', 1000);
+    }
+  }
+</script>
+</body>
+</html>
