@@ -35,27 +35,35 @@ exports.handler = async function(event) {
     };
   }
 
-  const ANTHROPIC_KEY = process.env.ANTHROPIC_KEY;
+  const GEMINI_KEY = process.env.GEMINI_KEY;
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': ANTHROPIC_KEY,
-      'anthropic-version': '2023-06-01'
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 300,
-      messages: [{ role: 'user', content: prompt }]
-    })
-  });
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt }]
+        }],
+        generationConfig: {
+          temperature: 0.3,
+          maxOutputTokens: 1000
+        }
+      })
+    }
+  );
 
   const data = await response.json();
+
+  // Gemini 응답을 Anthropic 형식으로 변환 (프론트엔드 코드 변경 없이)
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
 
   return {
     statusCode: 200,
     headers: { 'Access-Control-Allow-Origin': '*' },
-    body: JSON.stringify(data)
+    body: JSON.stringify({
+      content: [{ text }]
+    })
   };
 };
