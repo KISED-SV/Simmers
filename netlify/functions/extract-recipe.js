@@ -55,9 +55,11 @@ exports.handler = async function(event) {
   );
 
   const data = await response.json();
+  console.log('Gemini raw response:', JSON.stringify(data));
 
   // Gemini 응답을 Anthropic 형식으로 변환 (프론트엔드 코드 변경 없이)
   const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  console.log('Extracted text:', text);
 
   return {
     statusCode: 200,
