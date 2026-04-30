@@ -495,9 +495,13 @@ window.doSignup = async function() {
 
 window.socialLogin = async function(provider) {
   const p = provider.toLowerCase()
+  if (p === 'apple') {
+    alert('Apple 로그인은 준비 중이에요. Google 또는 이메일로 로그인해주세요!')
+    return
+  }
   const { error } = await supabase.auth.signInWithOAuth({
     provider: p,
-    options: { redirectTo: window.location.origin + '/simmers-feed.html' }
+    options: { redirectTo: 'https://simmers.netlify.app/simmers-feed.html' }
   })
   if (error) alert('OAuth error: ' + error.message)
 }
