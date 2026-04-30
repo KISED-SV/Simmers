@@ -148,7 +148,7 @@ body{background:var(--surface);color:var(--dark);font-family:'DM Sans',sans-seri
             <div class="section-label">Steps</div>
             <div class="steps-list" id="steps-list"></div>
             <div class="result-actions">
-              <button class="res-btn res-btn-primary" onclick="alert('Coming soon! Database connection needed.')">Post this recipe</button>
+              <button class="res-btn res-btn-primary" onclick="postRecipe()">Post this recipe</button>
               <button class="res-btn res-btn-secondary" onclick="copyRecipe()">Copy text</button>
             </div>
             <div class="raw-toggle" onclick="toggleRaw()">Show raw AI response ▾</div>
@@ -354,6 +354,130 @@ function copyRecipe() {
   const text = `${title}\n\nIngredients:\n${ingredients}\n\nSteps:\n${steps}`;
   navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard!'));
 }
+</script>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+const supabase = createClient(
+  'https://ifsaasfsapbkufvgjyzs.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlmc2Fhc2ZzYXBia3VmdmdqeXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNzQxNjAsImV4cCI6MjA4OTk1MDE2MH0.CGyqmFhq0KVwISbcJnF-R1Vvh1knBOa24OG6Pt-HAKI'
+)
+const { data: { user } } = await supabase.auth.getUser()
+
+// ── 추출된 레시피 DB에 저장 ──
+window.postRecipe = async function() {
+  if (!user) { location.href = 'simmers-auth.html'; return }
+
+  const title = document.getElementById('result-title').textContent
+  const ingredients = [...document.querySelectorAll('.ingredient-item')].map(el => el.textContent.trim())
+  const steps = [...document.querySelectorAll('.step-item')].map(el => el.querySelector('div:last-child').textContent.trim())
+  const time = document.getElementById('badge-time').textContent
+  const difficulty = document.getElementById('badge-diff').textContent
+
+  const btn = document.querySelector('.res-btn-primary')
+  btn.textContent = 'Posting...'
+  btn.disabled = true
+
+  const { error } = await supabase.from('recipes').insert({
+    user_id: user.id,
+    title,
+    ingredients,
+    steps,
+    time_minutes: parseInt(time) || null,
+    difficulty: difficulty || null,
+    tags: ['AI Extracted']
+  })
+
+  if (error) {
+    alert('저장 실패: ' + error.message)
+    btn.textContent = 'Post this recipe'
+    btn.disabled = false
+    return
+  }
+
+  btn.textContent = '✓ Posted!'
+  setTimeout(() => location.href = 'simmers-feed.html', 1000)
+}
+
+// ── 알림 시스템 ──
+window.toggleNotifPanel = function() {
+  const panel = document.getElementById('notif-panel')
+  panel.classList.toggle('open')
+  if (panel.classList.contains('open')) loadNotifications()
+}
+document.addEventListener('click', e => {
+  const wrap = document.querySelector('.notif-wrap')
+  if (wrap && !wrap.contains(e.target)) document.getElementById('notif-panel')?.classList.remove('open')
+})
+const typeIcon = { like:'♥', comment:'💬', follow:'👤', save:'🔖' }
+const typeColor = { like:'#EEEDFE', comment:'#FAECE7', follow:'#E1F5EE', save:'#FAEEDA' }
+const typeTextColor = { like:'#534AB7', comment:'#D85A30', follow:'#0F6E56', save:'#854F0B' }
+
+async function loadNotifications() {
+  if (!user) return
+  const { data: notifs } = await supabase
+    .from('notifications')
+    .select('*, actor:profiles!notifications_actor_id_fkey(username)')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(30)
+  const list = document.getElementById('notif-list')
+  const badge = document.getElementById('notif-badge')
+  if (!notifs || notifs.length === 0) {
+    list.innerHTML = '<div class="notif-empty">No notifications yet 🔔</div>'
+    return
+  }
+  const unreadCount = notifs.filter(n => !n.is_read).length
+  if (unreadCount > 0) { badge.textContent = unreadCount > 9 ? '9+' : unreadCount; badge.classList.add('show') }
+  list.innerHTML = ''
+  notifs.forEach(n => {
+    const actor = n.actor?.username || 'Someone'
+    const t = n.type
+    const el = document.createElement('div')
+    el.className = `notif-item ${n.is_read ? '' : 'unread'}`
+    el.dataset.id = n.id
+    el.onclick = () => markRead(n.id, n.recipe_id)
+    el.innerHTML = `
+      <div style="position:relative;display:flex;flex-direction:column;align-items:center;">
+        <div class="notif-avatar" style="background:${typeColor[t]};color:${typeTextColor[t]};">${actor.slice(0,2).toUpperCase()}</div>
+        <div class="notif-icon" style="background:${typeColor[t]};color:${typeTextColor[t]};">${typeIcon[t]}</div>
+      </div>
+      <div class="notif-body">
+        <div class="notif-text">${n.message || `<strong>${actor}</strong> interacted with your content`}</div>
+        <div class="notif-time">${getTimeAgo(n.created_at)}</div>
+      </div>
+      ${!n.is_read ? '<div class="notif-dot"></div>' : ''}`
+    list.appendChild(el)
+  })
+}
+window.markRead = async function(id, recipeId) {
+  await supabase.from('notifications').update({ is_read: true }).eq('id', id)
+  document.querySelector(`[data-id="${id}"]`)?.classList.remove('unread')
+  document.querySelector(`[data-id="${id}"] .notif-dot`)?.remove()
+  updateBadge()
+  if (recipeId) location.href = `simmers-recipe.html?id=${recipeId}`
+}
+window.markAllRead = async function() {
+  if (!user) return
+  await supabase.from('notifications').update({ is_read: true }).eq('user_id', user.id)
+  document.querySelectorAll('.notif-item').forEach(el => { el.classList.remove('unread'); el.querySelector('.notif-dot')?.remove() })
+  updateBadge()
+}
+function updateBadge() {
+  const unread = document.querySelectorAll('.notif-item.unread').length
+  const badge = document.getElementById('notif-badge')
+  if (unread > 0) { badge.textContent = unread > 9 ? '9+' : unread; badge.classList.add('show') }
+  else badge.classList.remove('show')
+}
+function getTimeAgo(dateStr) {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const min = Math.floor(diff / 60000)
+  if (min < 60) return `${min}m ago`
+  const hr = Math.floor(min / 60)
+  if (hr < 24) return `${hr}h ago`
+  return `${Math.floor(hr / 24)}d ago`
+}
+if (user) loadNotifications()
 </script>
 </body>
 </html>
