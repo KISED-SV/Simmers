@@ -311,87 +311,62 @@ body{background:var(--surface);color:var(--dark);font-family:'DM Sans',sans-seri
     <!-- ══ DETAIL MODE ══ -->
     <div class="detail-panel" id="detail-panel">
       <div class="recipe-hero" id="d-hero">
-        🍝
+        🍽️
         <div class="hero-overlay">
-          <div class="hero-badges">
-            <span class="hbadge">15 min</span>
-            <span class="hbadge">Easy</span>
-            <span class="hbadge fire">Italian</span>
-          </div>
+          <div class="hero-badges" id="hero-badges"></div>
           <button class="save-btn" onclick="toggleSave(this)">🔖</button>
         </div>
       </div>
 
       <div class="detail-meta">
-        <div class="author-avatar">JC</div>
+        <div class="author-avatar" id="author-avatar">?</div>
         <div>
-          <div class="author-name">jamie_cooks</div>
-          <div class="author-time">Just now</div>
+          <div class="author-name" id="author-name">Loading...</div>
+          <div class="author-time" id="author-time"></div>
         </div>
         <button class="detail-follow" onclick="toggleFollow(this)">Follow</button>
       </div>
 
-      <div class="detail-title" id="d-title">Garlic Butter Pasta</div>
-      <div class="detail-desc">The ultimate weeknight pasta — rich, garlicky, and done before you even realize you started cooking. Simple ingredients, big flavor.</div>
+      <div class="detail-title" id="d-title">Loading...</div>
+      <div class="detail-desc" id="d-desc"></div>
 
       <div class="action-bar">
         <button class="act-btn" onclick="toggleLike(this)"><span>♡</span> 0</button>
         <button class="act-btn"><span>💬</span> 0</button>
         <button class="act-btn"><span>↗</span> Share</button>
         <div class="act-spacer"></div>
-        <button class="watch-pill">▶ Watch video</button>
+        <button class="watch-pill" id="watch-btn" style="display:none;">▶ Watch video</button>
       </div>
 
       <div class="stat-row">
-        <div class="stat-card"><div class="stat-val">15</div><div class="stat-label">Minutes</div></div>
-        <div class="stat-card"><div class="stat-val">2</div><div class="stat-label">Servings</div></div>
-        <div class="stat-card"><div class="stat-val">Easy</div><div class="stat-label">Difficulty</div></div>
-        <div class="stat-card"><div class="stat-val">480</div><div class="stat-label">Calories</div></div>
+        <div class="stat-card"><div class="stat-val" id="stat-time">-</div><div class="stat-label">Minutes</div></div>
+        <div class="stat-card"><div class="stat-val" id="stat-serv">-</div><div class="stat-label">Servings</div></div>
+        <div class="stat-card"><div class="stat-val" id="stat-diff">-</div><div class="stat-label">Difficulty</div></div>
+        <div class="stat-card"><div class="stat-val" id="stat-cal">-</div><div class="stat-label">Calories</div></div>
       </div>
 
       <div class="detail-section">
         <div class="detail-section-title">Ingredients</div>
-        <div class="ingr-grid">
-          <div class="ingr-card"><div class="ingr-dot"></div>Spaghetti<span class="ingr-amount-badge">200g</span></div>
-          <div class="ingr-card"><div class="ingr-dot"></div>Butter<span class="ingr-amount-badge">3 tbsp</span></div>
-          <div class="ingr-card"><div class="ingr-dot"></div>Garlic cloves<span class="ingr-amount-badge">4 pcs</span></div>
-          <div class="ingr-card"><div class="ingr-dot"></div>Parmesan<span class="ingr-amount-badge">2 tbsp</span></div>
-          <div class="ingr-card"><div class="ingr-dot"></div>Fresh parsley<span class="ingr-amount-badge">handful</span></div>
-          <div class="ingr-card"><div class="ingr-dot"></div>Salt & pepper<span class="ingr-amount-badge">to taste</span></div>
+        <div class="ingr-grid" id="ingr-grid">
+          <div style="color:var(--muted);font-size:13px;">Loading...</div>
         </div>
       </div>
 
       <div class="detail-section">
         <div class="detail-section-title">Steps</div>
-        <div class="detail-step"><div class="d-step-num">1</div><div class="d-step-text">Boil pasta in well-salted water until al dente, about 8 minutes. Reserve ¼ cup pasta water before draining.</div></div>
-        <div class="detail-step"><div class="d-step-num">2</div><div class="d-step-text">Meanwhile, melt butter in a large pan over medium heat. Add minced garlic and cook for 1–2 minutes until fragrant — don't let it brown.</div></div>
-        <div class="detail-step"><div class="d-step-num">3</div><div class="d-step-text">Add drained pasta to the pan and toss to coat. Splash in a little pasta water if needed to loosen. Season generously with salt and pepper.</div></div>
-        <div class="detail-step"><div class="d-step-num">4</div><div class="d-step-text">Plate up, top with freshly grated parmesan and chopped parsley. Serve immediately.</div></div>
+        <div id="detail-steps">
+          <div style="color:var(--muted);font-size:13px;">Loading...</div>
+        </div>
       </div>
 
       <div class="detail-section">
         <div class="detail-section-title">Comments</div>
         <div class="comment-input-row">
-          <div class="comment-avatar">JK</div>
+          <div class="comment-avatar" id="my-avatar">?</div>
           <input class="comment-input" id="comment-in" placeholder="Leave a comment..." />
           <button class="comment-send" onclick="postComment()">Post</button>
         </div>
-        <div id="comments-list">
-          <div class="comment">
-            <div class="comment-avatar" style="background:#E1F5EE;color:#0F6E56;">SE</div>
-            <div class="comment-body">
-              <div><span class="comment-name">soyeon_eats</span><span class="comment-time">2h ago</span></div>
-              <div class="comment-text">Made this last night and it was incredible. Added a bit of lemon zest too — highly recommend!</div>
-            </div>
-          </div>
-          <div class="comment">
-            <div class="comment-avatar" style="background:#FAEEDA;color:#854F0B;">MR</div>
-            <div class="comment-body">
-              <div><span class="comment-name">miso_recipes</span><span class="comment-time">5h ago</span></div>
-              <div class="comment-text">This is my go-to weeknight dinner now. So simple and so good.</div>
-            </div>
-          </div>
-        </div>
+        <div id="comments-list"></div>
       </div>
     </div>
   </main>
@@ -469,21 +444,77 @@ window.loadRecipeDetail = async function() {
   if (!recipeId) return
   const { data: r } = await supabase
     .from('recipes')
-    .select('*, profiles(id, username)')
+    .select('*, profiles(id, username, avatar_url)')
     .eq('id', recipeId)
     .single()
   if (!r) return
 
+  // 기본 정보
   document.getElementById('d-title').textContent = r.title
-  document.querySelector('.detail-desc').textContent = r.description || ''
-  document.querySelector('.author-name').textContent = r.profiles?.username || ''
-  const initials = (r.profiles?.username || 'U').slice(0,2).toUpperCase()
-  document.querySelector('.author-avatar').textContent = initials
+  document.getElementById('d-desc').textContent = r.description || ''
+  const username = r.profiles?.username || 'unknown'
+  const initials = username.slice(0,2).toUpperCase()
+  document.getElementById('author-name').textContent = username
+  document.getElementById('author-time').textContent = getTimeAgo(r.created_at)
+  document.getElementById('author-avatar').textContent = initials
+  if (document.getElementById('my-avatar') && user) {
+    const { data: me } = await supabase.from('profiles').select('username').eq('id', user.id).single()
+    document.getElementById('my-avatar').textContent = (me?.username || 'U').slice(0,2).toUpperCase()
+  }
 
-  // 통계 업데이트
-  const stats = document.querySelectorAll('.stat-val')
-  if (stats[0]) stats[0].textContent = r.time_minutes || '-'
-  if (stats[2]) stats[2].textContent = r.difficulty || '-'
+  // 통계
+  document.getElementById('stat-time').textContent = r.time_minutes || '-'
+  document.getElementById('stat-serv').textContent = r.servings || '-'
+  document.getElementById('stat-diff').textContent = r.difficulty || '-'
+  document.getElementById('stat-cal').textContent = '-'
+
+  // 히어로 배지
+  const badges = document.getElementById('hero-badges')
+  badges.innerHTML = ''
+  if (r.time_minutes) badges.innerHTML += `<span class="hbadge">${r.time_minutes} min</span>`
+  if (r.difficulty) badges.innerHTML += `<span class="hbadge">${r.difficulty}</span>`
+  if (r.category) badges.innerHTML += `<span class="hbadge fire">${r.category}</span>`
+
+  // 히어로 이미지
+  const hero = document.getElementById('d-hero')
+  if (r.cover_url) {
+    hero.style.backgroundImage = `url(${r.cover_url})`
+    hero.style.backgroundSize = 'cover'
+    hero.style.backgroundPosition = 'center'
+    hero.style.fontSize = '0'
+  } else {
+    hero.textContent = r.cover_emoji || '🍽️'
+    hero.appendChild(document.querySelector('#d-hero .hero-overlay') || (() => {
+      const o = document.createElement('div'); o.className = 'hero-overlay'; return o
+    })())
+  }
+
+  // Watch 버튼
+  if (r.youtube_url) {
+    const watchBtn = document.getElementById('watch-btn')
+    watchBtn.style.display = 'inline-flex'
+    watchBtn.onclick = () => window.open(r.youtube_url, '_blank')
+  }
+
+  // 재료
+  const ingrGrid = document.getElementById('ingr-grid')
+  if (r.ingredients && r.ingredients.length > 0) {
+    ingrGrid.innerHTML = r.ingredients.map(ing =>
+      `<div class="ingr-card"><div class="ingr-dot"></div>${ing}</div>`
+    ).join('')
+  } else {
+    ingrGrid.innerHTML = '<div style="color:var(--muted);font-size:13px;">No ingredients listed.</div>'
+  }
+
+  // 스텝
+  const stepsEl = document.getElementById('detail-steps')
+  if (r.steps && r.steps.length > 0) {
+    stepsEl.innerHTML = r.steps.map((s, i) =>
+      `<div class="detail-step"><div class="d-step-num">${i+1}</div><div class="d-step-text">${s}</div></div>`
+    ).join('')
+  } else {
+    stepsEl.innerHTML = '<div style="color:var(--muted);font-size:13px;">No steps listed.</div>'
+  }
 
   // 좋아요/저장 상태
   if (user) {
