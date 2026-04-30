@@ -35,30 +35,26 @@ exports.handler = async function(event) {
     };
   }
 
-  const GEMINI_KEY = process.env.GEMINI_KEY;
+  const GROQ_KEY = process.env.GROQ_KEY;
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${GEMINI_KEY}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{
-          parts: [{ text: prompt }]
-        }],
-        generationConfig: {
-          temperature: 0.3,
-          maxOutputTokens: 1000
-        }
-      })
-    }
-  );
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${GROQ_KEY}`
+    },
+    body: JSON.stringify({
+      model: 'llama-3.3-70b-versatile',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.3,
+      max_tokens: 1000
+    })
+  });
 
   const data = await response.json();
-  console.log('Gemini raw response:', JSON.stringify(data));
+  console.log('Groq raw response:', JSON.stringify(data));
 
-  // Gemini 응답을 Anthropic 형식으로 변환 (프론트엔드 코드 변경 없이)
-  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+  const text = data?.choices?.[0]?.message?.content || '';
   console.log('Extracted text:', text);
 
   return {
