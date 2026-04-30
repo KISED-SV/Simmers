@@ -373,6 +373,8 @@ window.postRecipe = async function() {
   const steps = [...document.querySelectorAll('.step-item')].map(el => el.querySelector('div:last-child').textContent.trim())
   const time = document.getElementById('badge-time').textContent
   const difficulty = document.getElementById('badge-diff').textContent
+  const servings = document.getElementById('badge-serv').textContent
+  const youtubeUrl = document.getElementById('yt-input').value.trim()
 
   const btn = document.querySelector('.res-btn-primary')
   btn.textContent = 'Posting...'
@@ -385,6 +387,8 @@ window.postRecipe = async function() {
     steps,
     time_minutes: parseInt(time) || null,
     difficulty: difficulty || null,
+    servings: servings || null,
+    youtube_url: youtubeUrl || null,
     tags: ['AI Extracted']
   })
 
