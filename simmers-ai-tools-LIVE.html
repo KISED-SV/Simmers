@@ -447,8 +447,15 @@ window.postRecipe = async function() {
 // ── 알림 시스템 ──
 window.toggleNotifPanel = function() {
   const panel = document.getElementById('notif-panel')
+  const btn = document.querySelector('.notif-btn')
   panel.classList.toggle('open')
-  if (panel.classList.contains('open')) loadNotifications()
+  if (panel.classList.contains('open')) {
+    // 버튼 위치 기준으로 패널 위치 계산
+    const rect = btn.getBoundingClientRect()
+    panel.style.top = rect.top + 'px'
+    panel.style.right = (window.innerWidth - rect.left + 8) + 'px'
+    loadNotifications()
+  }
 }
 document.addEventListener('click', e => {
   const wrap = document.querySelector('.notif-wrap')
