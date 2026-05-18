@@ -209,6 +209,23 @@ body { background: var(--surface); color: var(--dark); font-family: 'DM Sans', s
   .fchip:nth-child(2), .fchip:nth-child(3) { margin-left: 0; }
   .right-panel { padding: 32px 24px; }
 }
+/* ── 모바일 하단 네비게이션 ── */
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--white);border-top:1px solid var(--border);padding:8px 16px calc(8px + env(safe-area-inset-bottom));z-index:300;align-items:center;justify-content:space-around;}
+.mobile-nav-item{display:flex;flex-direction:column;align-items:center;gap:3px;text-decoration:none;color:var(--muted);font-size:11px;font-family:'DM Sans',sans-serif;padding:4px 8px;border-radius:10px;transition:color .15s;}
+.mobile-nav-item.active{color:var(--flame);}
+.mobile-nav-icon{font-size:20px;line-height:1;}
+.mobile-nav-label{font-size:10px;}
+.mobile-nav-post{background:var(--flame);color:var(--white) !important;width:48px;height:48px;border-radius:50%;font-size:24px !important;justify-content:center;margin-top:-20px;box-shadow:0 4px 12px rgba(216,90,48,0.4);}
+.mobile-nav-post .mobile-nav-icon{font-size:24px;}
+
+@media(max-width:768px){
+  .mobile-nav{display:flex;}
+  .sidebar{display:none !important;}
+  body{padding-bottom:72px;}
+  .layout{grid-template-columns:1fr !important;}
+  .main{padding:16px !important;}
+}
+
 </style>
 </head>
 <body>
