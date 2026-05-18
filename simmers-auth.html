@@ -283,9 +283,7 @@ body { background: var(--surface); color: var(--dark); font-family: 'DM Sans', s
         <button class="social-btn" onclick="socialLogin('Google')">
           <span class="social-icon">G</span> Continue with Google
         </button>
-        <button class="social-btn" onclick="socialLogin('Apple')">
-          <span class="social-icon">🍎</span> Continue with Apple
-        </button>
+
       </div>
 
       <div class="divider-row">
@@ -321,9 +319,7 @@ body { background: var(--surface); color: var(--dark); font-family: 'DM Sans', s
         <button class="social-btn" onclick="socialLogin('Google')">
           <span class="social-icon">G</span> Sign up with Google
         </button>
-        <button class="social-btn" onclick="socialLogin('Apple')">
-          <span class="social-icon">🍎</span> Sign up with Apple
-        </button>
+
       </div>
 
       <div class="divider-row">
@@ -512,10 +508,6 @@ window.doSignup = async function() {
 
 window.socialLogin = async function(provider) {
   const p = provider.toLowerCase()
-  if (p === 'apple') {
-    alert('Apple 로그인은 준비 중이에요. Google 또는 이메일로 로그인해주세요!')
-    return
-  }
   const { error } = await supabase.auth.signInWithOAuth({
     provider: p,
     options: { redirectTo: 'https://simmers.netlify.app/simmers-feed.html' }
