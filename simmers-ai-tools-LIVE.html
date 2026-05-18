@@ -95,7 +95,7 @@ body{background:var(--surface);color:var(--dark);font-family:'DM Sans',sans-seri
   </aside>
 
   <main class="main">
-    <div class="live-badge"><span class="live-dot"></span> Live — powered by AI</div>
+    <div class="live-badge"><span class="live-dot"></span> Live — powered by Groq AI</div>
     <div class="page-title">AI Tools</div>
     <div class="page-sub">Link your own YouTube cooking video and let AI extract the recipe instantly.</div>
 
@@ -171,7 +171,7 @@ function setMode(mode) {
   document.getElementById('btn-mock').style.color = isMock ? 'var(--white)' : 'var(--muted)';
   document.getElementById('btn-live').style.background = !isMock ? 'var(--flame)' : 'transparent';
   document.getElementById('btn-live').style.color = !isMock ? 'var(--white)' : 'var(--muted)';
-  document.getElementById('mode-hint').textContent = isMock ? 'Mock mode — no credits used' : 'Live mode — uses Anthropic credits';
+  document.getElementById('mode-hint').textContent = isMock ? 'Mock mode — no credits used' : 'Live mode — uses Groq AI';
 }
 
 function extractVideoId(url) {
