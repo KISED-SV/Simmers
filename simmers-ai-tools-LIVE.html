@@ -117,6 +117,21 @@ body{background:var(--surface);color:var(--dark);font-family:'DM Sans',sans-seri
     <a class="nav-item" href="simmers-explore.html">🔍 &nbsp;Explore</a>
     <a class="nav-item" href="simmers-saved.html">🔖 &nbsp;Saved</a>
     <a class="nav-item" href="simmers-profile.html">○ &nbsp;Profile</a>
+    <div class="notif-wrap">
+      <button class="notif-btn" onclick="toggleNotifPanel()">
+        <span>🔔</span> Notifications
+        <span class="notif-badge" id="notif-badge"></span>
+      </button>
+      <div class="notif-panel" id="notif-panel">
+        <div class="notif-header">
+          <div class="notif-title">Notifications</div>
+          <button class="notif-read-all" onclick="markAllRead()">Mark all read</button>
+        </div>
+        <div class="notif-list" id="notif-list">
+          <div class="notif-empty">Loading...</div>
+        </div>
+      </div>
+    </div>
     <button class="post-btn">+ Post a Recipe</button>
   </aside>
 
