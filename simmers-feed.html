@@ -367,74 +367,24 @@ body { background: var(--surface); color: var(--dark); font-family: 'DM Sans', s
   <!-- RIGHT SIDEBAR -->
   <aside class="sidebar-right">
     <div class="profile-mini">
-      <div class="profile-mini-avatar">JK</div>
+      <div class="profile-mini-avatar" id="profile-mini-avatar">?</div>
       <div>
-        <div class="profile-mini-name">You</div>
-        <div class="profile-mini-handle">@home_chef</div>
+        <div class="profile-mini-name" id="profile-mini-name">Loading...</div>
+        <div class="profile-mini-handle" id="profile-mini-handle"></div>
       </div>
     </div>
 
     <div class="sidebar-section">
       <div class="sidebar-title">Trending recipes</div>
-      <div class="trending-item">
-        <div class="trending-emoji">🍳</div>
-        <div>
-          <div class="trending-name">Smash burgers</div>
-          <div class="trending-count">2.1k recipes</div>
-        </div>
-        <div class="trending-num">#1</div>
-      </div>
-      <div class="trending-item">
-        <div class="trending-emoji">🍣</div>
-        <div>
-          <div class="trending-name">Salmon bowls</div>
-          <div class="trending-count">1.8k recipes</div>
-        </div>
-        <div class="trending-num">#2</div>
-      </div>
-      <div class="trending-item">
-        <div class="trending-emoji">🥘</div>
-        <div>
-          <div class="trending-name">One-pot pasta</div>
-          <div class="trending-count">1.4k recipes</div>
-        </div>
-        <div class="trending-num">#3</div>
-      </div>
-      <div class="trending-item">
-        <div class="trending-emoji">🧆</div>
-        <div>
-          <div class="trending-name">Crispy falafel</div>
-          <div class="trending-count">980 recipes</div>
-        </div>
-        <div class="trending-num">#4</div>
+      <div id="trending-list">
+        <div style="color:var(--muted);font-size:13px;padding:8px 0;">Loading...</div>
       </div>
     </div>
 
     <div class="sidebar-section">
       <div class="sidebar-title">Suggested cooks</div>
-      <div class="suggest-item">
-        <div class="suggest-avatar" style="background:#EEEDFE;color:#534AB7;">PK</div>
-        <div>
-          <div class="suggest-name">pasta_king</div>
-          <div class="suggest-sub">Italian · 4.2k followers</div>
-        </div>
-        <button class="suggest-follow" onclick="toggleFollow(this)">Follow</button>
-      </div>
-      <div class="suggest-item">
-        <div class="suggest-avatar" style="background:#E1F5EE;color:#0F6E56;">TR</div>
-        <div>
-          <div class="suggest-name">taco_rosa</div>
-          <div class="suggest-sub">Mexican · 3.1k followers</div>
-        </div>
-        <button class="suggest-follow" onclick="toggleFollow(this)">Follow</button>
-      </div>
-      <div class="suggest-item">
-        <div class="suggest-avatar" style="background:#FAEEDA;color:#854F0B;">WK</div>
-        <div>
-          <div class="suggest-name">wok_master</div>
-          <div class="suggest-sub">Asian · 5.8k followers</div>
-        </div>
-        <button class="suggest-follow" onclick="toggleFollow(this)">Follow</button>
+      <div id="suggested-cooks">
+        <div style="color:var(--muted);font-size:13px;padding:8px 0;">Loading...</div>
       </div>
     </div>
   </aside>
@@ -523,8 +473,8 @@ window.toggleLike = async function(btn) {
 // ── 팔로우 토글 (DB 연결) ──
 window.toggleFollow = async function(btn) {
   if (!user) { location.href = 'simmers-auth.html'; return }
-  const card = btn.closest('.recipe-card')
-  const targetUserId = card?.dataset.authorId
+  const card = btn.closest('.recipe-card, .suggest-item')
+  const targetUserId = card?.dataset.authorId || card?.dataset.userId
   if (!targetUserId || targetUserId === user.id) return
 
   const isFollowing = btn.classList.contains('following')
@@ -532,9 +482,11 @@ window.toggleFollow = async function(btn) {
   btn.textContent = isFollowing ? 'Follow' : 'Following'
 
   if (isFollowing) {
+    myFollows?.delete(targetUserId)
     await supabase.from('follows').delete()
       .eq('follower_id', user.id).eq('following_id', targetUserId)
   } else {
+    myFollows?.add(targetUserId)
     await supabase.from('follows').insert({ follower_id: user.id, following_id: targetUserId })
     const { data: me } = await supabase.from('profiles').select('username').eq('id', user.id).single()
     await createNotification(targetUserId, 'follow', null, me?.username)
@@ -750,6 +702,89 @@ async function createNotification(targetUserId, type, recipeId = null, actorUser
 // 페이지 로드 시 뱃지 초기화
 if (user) loadNotifications()
 
+// ── 사이드바 실제 데이터 로드 ──
+async function loadSidebar() {
+  // 미니 프로필
+  if (user) {
+    const { data: profile } = await supabase
+      .from('profiles').select('username, avatar_url').eq('id', user.id).single()
+    if (profile) {
+      document.getElementById('profile-mini-name').textContent = profile.username || 'You'
+      document.getElementById('profile-mini-handle').textContent = '@' + (profile.username || '')
+      const avatarEl = document.getElementById('profile-mini-avatar')
+      if (profile.avatar_url) {
+        avatarEl.innerHTML = `<img src="${profile.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />`
+      } else {
+        avatarEl.textContent = (profile.username || 'U').slice(0,2).toUpperCase()
+      }
+    }
+  }
+
+  // 트렌딩 — 좋아요 수 기준 상위 4개
+  const { data: recipes } = await supabase
+    .from('recipes').select('id, title, cover_emoji').limit(20)
+  if (recipes && recipes.length > 0) {
+    const ids = recipes.map(r => r.id)
+    const { data: likes } = await supabase.from('likes').select('recipe_id').in('recipe_id', ids)
+    const likeMap = {}
+    likes?.forEach(l => { likeMap[l.recipe_id] = (likeMap[l.recipe_id] || 0) + 1 })
+    const top4 = recipes
+      .map(r => ({ ...r, likes: likeMap[r.id] || 0 }))
+      .sort((a, b) => b.likes - a.likes)
+      .slice(0, 4)
+
+    const trendingList = document.getElementById('trending-list')
+    if (top4.length === 0) {
+      trendingList.innerHTML = '<div style="color:var(--muted);font-size:13px;">No recipes yet.</div>'
+    } else {
+      trendingList.innerHTML = top4.map((r, i) => `
+        <div class="trending-item" onclick="location.href='simmers-recipe.html?id=${r.id}'" style="cursor:pointer;">
+          <div class="trending-emoji">${r.cover_emoji || '🍽️'}</div>
+          <div>
+            <div class="trending-name">${r.title}</div>
+            <div class="trending-count">${r.likes} likes</div>
+          </div>
+          <div class="trending-num">#${i+1}</div>
+        </div>`).join('')
+    }
+  } else {
+    document.getElementById('trending-list').innerHTML = '<div style="color:var(--muted);font-size:13px;">No recipes yet.</div>'
+  }
+
+  // 추천 유저 — 본인 제외, 팔로우 안 한 유저
+  const { data: profiles } = await supabase
+    .from('profiles').select('id, username, avatar_url').limit(10)
+  if (profiles && profiles.length > 0) {
+    const avatarColors = [
+      {bg:'#EEEDFE',color:'#534AB7'},{bg:'#E1F5EE',color:'#0F6E56'},
+      {bg:'#FAEEDA',color:'#854F0B'},{bg:'#FAECE7',color:'#D85A30'},
+    ]
+    const suggested = profiles.filter(p => p.id !== user?.id).slice(0, 3)
+    const cooksList = document.getElementById('suggested-cooks')
+    if (suggested.length === 0) {
+      cooksList.innerHTML = '<div style="color:var(--muted);font-size:13px;">No cooks yet.</div>'
+    } else {
+      cooksList.innerHTML = suggested.map((p, i) => {
+        const ac = avatarColors[i % avatarColors.length]
+        const avatarHtml = p.avatar_url
+          ? `<img src="${p.avatar_url}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;" />`
+          : `<div class="suggest-avatar" style="background:${ac.bg};color:${ac.color};">${(p.username||'U').slice(0,2).toUpperCase()}</div>`
+        return `
+          <div class="suggest-item" data-user-id="${p.id}">
+            ${avatarHtml}
+            <div>
+              <div class="suggest-name">${p.username}</div>
+            </div>
+            <button class="suggest-follow" onclick="toggleFollow(this)">${myFollows?.has(p.id) ? 'Following' : 'Follow'}</button>
+          </div>`
+      }).join('')
+    }
+  } else {
+    document.getElementById('suggested-cooks').innerHTML = '<div style="color:var(--muted);font-size:13px;">No cooks yet.</div>'
+  }
+}
+
+loadSidebar()
 loadRecipes()
 </script>
 

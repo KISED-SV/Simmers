@@ -335,6 +335,7 @@ Please extract and return a recipe in this EXACT JSON format (no markdown, no ex
   "time": "X min",
   "difficulty": "Easy/Medium/Hard",
   "servings": "X servings",
+  "category": "One of: Italian, Korean, Japanese, Chinese, Mexican, Indian, American, French, Thai, Mediterranean, Fusion, Dessert, Healthy, Vegan, Other",
   "ingredients": ["amount unit ingredient", "amount unit ingredient"],
   "steps": ["Step description", "Step description"]
 }
@@ -442,6 +443,18 @@ window.postRecipe = async function() {
   const servings = parseInt(document.getElementById('badge-serv').textContent) || null
   const youtubeUrl = document.getElementById('yt-input').value.trim()
 
+  // 추출된 레시피 데이터에서 category 가져오기
+  const rawText = document.getElementById('raw-box').textContent
+  let category = null
+  try {
+    const cleaned = rawText.replace(/```json|```/g, '').trim()
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/)
+    if (jsonMatch) {
+      const parsed = JSON.parse(jsonMatch[0])
+      category = parsed.category || null
+    }
+  } catch(e) {}
+
   const btn = document.querySelector('.res-btn-primary')
   btn.textContent = 'Posting...'
   btn.disabled = true
@@ -455,6 +468,7 @@ window.postRecipe = async function() {
     difficulty: difficulty || null,
     servings: servings || null,
     youtube_url: youtubeUrl || null,
+    category: category || null,
     tags: ['AI Extracted']
   })
 
