@@ -361,7 +361,7 @@ body{background:var(--surface);color:var(--dark);font-family:'DM Sans',sans-seri
 
       <div class="action-bar">
         <button class="act-btn" onclick="toggleLike(this)"><span>♡</span> 0</button>
-        <button class="act-btn"><span>💬</span> 0</button>
+        <button class="act-btn" id="comment-count-btn"><span>💬</span> 0</button>
         <button class="act-btn"><span>↗</span> Share</button>
         <div class="act-spacer"></div>
         <button class="watch-pill" id="watch-btn" style="display:none;">▶ Watch video</button>
@@ -669,6 +669,10 @@ async function loadComments() {
   const avatarColors = ['#EEEDFE','#E1F5EE','#FAEEDA','#FAECE7']
   const textColors = ['#534AB7','#0F6E56','#854F0B','#D85A30']
 
+  // 댓글 수 버튼에 반영
+  const countBtn = document.getElementById('comment-count-btn')
+  if (countBtn) countBtn.innerHTML = `<span>💬</span> ${comments?.length || 0}`
+
   comments?.forEach((c, i) => {
     const ai = i % 4
     const username = c.profiles?.username || 'unknown'
@@ -725,6 +729,13 @@ window.postComment = async function() {
     </div>`
   list.prepend(el)
   input.value = ''
+
+  // 댓글 수 +1
+  const countBtn = document.getElementById('comment-count-btn')
+  if (countBtn) {
+    const current = parseInt(countBtn.textContent.trim().split(/\s+/).pop()) || 0
+    countBtn.innerHTML = `<span>💬</span> ${current + 1}`
+  }
 }
 
 // ── Publish 버튼 (레시피 저장) ──

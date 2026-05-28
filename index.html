@@ -376,7 +376,7 @@
     <h1>Cook. Share.<br><em>Inspire.</em></h1>
     <p class="hero-sub">The community where home cooks share recipes, post cooking videos, and let AI extract recipes from YouTube instantly.</p>
     <div class="hero-actions">
-      <a href="#join" class="btn-primary">Join the waitlist</a>
+      <a href="simmers-auth.html" class="btn-primary">Get started</a>
       <a href="simmers-ai-tools-LIVE.html" class="btn-secondary">Try AI tools</a>
     </div>
     <div class="hero-cards">
@@ -471,12 +471,10 @@
 <section class="cta-section" id="join">
   <div class="cta-inner reveal">
     <h2 class="cta-title">Ready to <span>simmer?</span></h2>
-    <p class="cta-sub">We're launching soon. Join the waitlist and be the first to cook with Simmers.</p>
+    <p class="cta-sub">Join the community and start sharing your recipes today.</p>
     <div class="email-form">
-      <input class="email-input" type="email" placeholder="your@email.com" />
-      <button class="btn-primary" onclick="handleJoin()">Join waitlist</button>
+      <button class="btn-primary" onclick="location.href='simmers-auth.html'" style="margin:0 auto;">Create your account</button>
     </div>
-    <p id="join-msg" style="margin-top:14px;font-size:13px;color:var(--flame);display:none;">🎉 You're on the list! We'll be in touch soon.</p>
   </div>
 </section>
 
@@ -496,17 +494,6 @@
     });
   }, { threshold: 0.12 });
   reveals.forEach(el => observer.observe(el));
-
-  function handleJoin() {
-    const input = document.querySelector('.email-input');
-    if (input.value.includes('@')) {
-      document.getElementById('join-msg').style.display = 'block';
-      input.value = '';
-    } else {
-      input.style.borderColor = '#D85A30';
-      setTimeout(() => input.style.borderColor = '', 1000);
-    }
-  }
 </script>
 </body>
 </html>
