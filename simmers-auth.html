@@ -487,9 +487,24 @@ window.doSignup = async function() {
   const pass = document.getElementById('signup-pass').value
   if (!email || !pass || !username) { alert('Please fill in all fields.'); return }
   if (pass.length < 8) { alert('Password must be at least 8 characters.'); return }
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+    alert('Username can only contain letters, numbers, and underscores.')
+    return
+  }
   const btn = document.querySelector('#signup-form .submit-btn')
   btn.textContent = 'Creating account...'
   btn.disabled = true
+
+  // username 중복 미리 체크
+  const { data: existing } = await supabase
+    .from('profiles').select('id').eq('username', username).maybeSingle()
+  if (existing) {
+    alert('This username is already taken. Please choose another.')
+    btn.textContent = 'Create my account'
+    btn.disabled = false
+    return
+  }
+
   const { error } = await supabase.auth.signUp({
     email, password: pass,
     options: { data: { username, full_name: firstName + ' ' + lastName } }

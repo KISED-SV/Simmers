@@ -219,12 +219,8 @@ body{background:var(--surface);color:var(--dark);font-family:'DM Sans',sans-seri
   <div class="modal" onclick="event.stopPropagation()">
     <div class="modal-title">Edit profile</div>
     <div class="modal-field">
-      <div class="modal-label">Display name</div>
-      <input class="modal-input" id="edit-name" value="" />
-    </div>
-    <div class="modal-field">
       <div class="modal-label">Username</div>
-      <input class="modal-input" id="edit-handle" value="" />
+      <input class="modal-input" id="edit-handle" value="" placeholder="username" />
     </div>
     <div class="modal-field">
       <div class="modal-label">Bio</div>
@@ -324,7 +320,6 @@ async function loadProfile() {
   }
 
   // 모달 초기값 세팅
-  document.getElementById('edit-name').value = username
   document.getElementById('edit-handle').value = username
   document.getElementById('edit-bio').value = bio
 
@@ -516,12 +511,26 @@ function renderLikedRecipes(recipes) {
 
 // ── 프로필 편집 저장 ──
 window.saveEdit = async function() {
-  const username = document.getElementById('edit-name').value.trim()
+  const username = document.getElementById('edit-handle').value.trim()
   const bio = document.getElementById('edit-bio').value.trim()
-  if (!username) return
+  if (!username) { alert('Username을 입력해주세요.'); return }
+
+  // username 형식 검증 (공백, 특수문자 방지)
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+    alert('Username은 영문, 숫자, 밑줄(_)만 사용할 수 있어요.')
+    return
+  }
 
   const { error } = await supabase.from('profiles').update({ username, bio }).eq('id', user.id)
-  if (error) { alert('저장 실패: ' + error.message); return }
+  if (error) {
+    // 중복 username 에러 (UNIQUE 제약 위반)
+    if (error.code === '23505' || error.message.includes('duplicate') || error.message.includes('unique')) {
+      alert('이미 사용 중인 username이에요. 다른 이름을 골라주세요.')
+    } else {
+      alert('저장 실패: ' + error.message)
+    }
+    return
+  }
 
   document.getElementById('name-display').textContent = username
   document.getElementById('handle-display').textContent = '@' + username
