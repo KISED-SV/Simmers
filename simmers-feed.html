@@ -565,16 +565,16 @@ async function loadRecipes() {
 
     card.innerHTML = `
       <div class="card-header">
-        <div class="avatar" style="background:${ac.bg};color:${ac.color};">${initials}</div>
+        <div class="avatar" style="background:${ac.bg};color:${ac.color};cursor:pointer;" onclick="location.href='simmers-profile.html?id=${r.profiles?.id}'">${initials}</div>
         <div>
-          <div class="avatar-name">${username}</div>
+          <div class="avatar-name" style="cursor:pointer;" onclick="location.href='simmers-profile.html?id=${r.profiles?.id}'">${username}</div>
           <div class="avatar-time">${timeAgo}</div>
         </div>
         ${r.profiles?.id !== user?.id
           ? `<button class="follow-btn ${isFollowing ? 'following' : ''}" onclick="toggleFollow(this)">${isFollowing ? 'Following' : 'Follow'}</button>`
           : ''}
       </div>
-      <div class="card-thumb" style="background:${grad};position:relative;">
+      <div class="card-thumb" style="background:${grad};position:relative;cursor:pointer;" onclick="location.href='simmers-recipe.html?id=${r.id}'">
         ${r.cover_url
           ? `<img src="${r.cover_url}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;" />`
           : (r.cover_emoji || '🍽️')}
@@ -585,7 +585,7 @@ async function loadRecipes() {
         </div>
       </div>
       <div class="card-body">
-        <div class="card-title">${r.title}</div>
+        <div class="card-title" style="cursor:pointer;" onclick="location.href='simmers-recipe.html?id=${r.id}'">${r.title}</div>
         ${r.description ? `<div class="card-desc">${r.description}</div>` : ''}
         <div class="card-actions">
           <button class="action-btn ${liked ? 'liked' : ''}" onclick="toggleLike(this)">

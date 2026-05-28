@@ -347,12 +347,13 @@ body{background:var(--surface);color:var(--dark);font-family:'DM Sans',sans-seri
       </div>
 
       <div class="detail-meta">
-        <div class="author-avatar" id="author-avatar">?</div>
+        <div class="author-avatar" id="author-avatar" style="cursor:pointer;">?</div>
         <div>
-          <div class="author-name" id="author-name">Loading...</div>
+          <div class="author-name" id="author-name" style="cursor:pointer;">Loading...</div>
           <div class="author-time" id="author-time"></div>
         </div>
-        <button class="detail-follow" onclick="toggleFollow(this)">Follow</button>
+        <button class="detail-follow" id="detail-follow-btn" onclick="toggleFollow(this)">Follow</button>
+        <button class="detail-follow" id="delete-btn" onclick="deleteRecipe()" style="display:none;border-color:#F7C1C1;color:#A32D2D;">Delete</button>
       </div>
 
       <div class="detail-title" id="d-title">Loading...</div>
@@ -490,6 +491,19 @@ window.loadRecipeDetail = async function() {
     document.getElementById('my-avatar').textContent = (me?.username || 'U').slice(0,2).toUpperCase()
   }
 
+  // 작성자 프로필로 이동
+  const authorId = r.profiles?.id
+  if (authorId) {
+    document.getElementById('author-name').onclick = () => location.href = `simmers-profile.html?id=${authorId}`
+    document.getElementById('author-avatar').onclick = () => location.href = `simmers-profile.html?id=${authorId}`
+  }
+
+  // 본인 레시피면 삭제 버튼 표시, 팔로우 버튼 숨김
+  if (user && authorId === user.id) {
+    document.getElementById('delete-btn').style.display = 'inline-block'
+    document.getElementById('detail-follow-btn').style.display = 'none'
+  }
+
   // 통계
   document.getElementById('stat-time').textContent = r.time_minutes || '-'
   document.getElementById('stat-serv').textContent = r.servings || '-'
@@ -565,6 +579,36 @@ window.loadRecipeDetail = async function() {
 
   // 댓글 불러오기
   loadComments()
+}
+
+// ── 레시피 삭제 ──
+window.deleteRecipe = async function() {
+  if (!user || !recipeId) return
+  if (!confirm('이 레시피를 삭제할까요? 되돌릴 수 없어요.')) return
+
+  const btn = document.getElementById('delete-btn')
+  btn.textContent = 'Deleting...'
+  btn.disabled = true
+
+  // 연관 데이터 먼저 삭제 (likes, saves, comments, notifications)
+  await Promise.all([
+    supabase.from('likes').delete().eq('recipe_id', recipeId),
+    supabase.from('saves').delete().eq('recipe_id', recipeId),
+    supabase.from('comments').delete().eq('recipe_id', recipeId),
+    supabase.from('notifications').delete().eq('recipe_id', recipeId)
+  ])
+
+  const { error } = await supabase.from('recipes').delete().eq('id', recipeId).eq('user_id', user.id)
+
+  if (error) {
+    alert('삭제 실패: ' + error.message)
+    btn.textContent = 'Delete'
+    btn.disabled = false
+    return
+  }
+
+  alert('레시피가 삭제됐어요.')
+  location.href = 'simmers-profile.html'
 }
 
 // id가 있으면 자동으로 detail 모드로 전환

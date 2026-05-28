@@ -177,9 +177,10 @@ body{background:var(--surface);color:var(--dark);font-family:'DM Sans',sans-seri
           <div class="pstat"><div class="pstat-val">91</div><div class="pstat-label">Following</div></div>
         </div>
       </div>
-      <div class="profile-actions">
-        <button class="edit-btn" onclick="openEdit()">Edit profile</button>
-        <button class="signout-btn" onclick="signOut()">Sign out</button>
+      <div class="profile-actions" id="profile-actions">
+        <button class="edit-btn" id="edit-profile-btn" onclick="openEdit()">Edit profile</button>
+        <button class="signout-btn" id="signout-profile-btn" onclick="signOut()">Sign out</button>
+        <button class="edit-btn" id="follow-profile-btn" onclick="toggleProfileFollow()" style="display:none;">Follow</button>
       </div>
     </div>
 
@@ -262,6 +263,11 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
 const { data: { user } } = await supabase.auth.getUser()
 if (!user) { location.href = 'simmers-auth.html' }
 
+// 보려는 프로필 ID — ?id= 파라미터가 있으면 그 유저, 없으면 본인
+const viewParams = new URLSearchParams(location.search)
+const viewingId = viewParams.get('id') || user?.id
+const isOwnProfile = viewingId === user?.id
+
 // ── 아바타 이미지 업로드 ──
 window.handleAvatarUpload = async function(e) {
   if (!user) return
@@ -294,11 +300,11 @@ async function loadProfile() {
     { count: followingCount },
     { data: likes }
   ] = await Promise.all([
-    supabase.from('profiles').select('*').eq('id', user.id).single(),
-    supabase.from('recipes').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
-    supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', user.id),
-    supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', user.id),
-    supabase.from('likes').select('recipe_id, recipes(id, title, category, difficulty, time_minutes, cover_emoji)').eq('user_id', user.id)
+    supabase.from('profiles').select('*').eq('id', viewingId).single(),
+    supabase.from('recipes').select('*').eq('user_id', viewingId).order('created_at', { ascending: false }),
+    supabase.from('follows').select('*', { count: 'exact', head: true }).eq('following_id', viewingId),
+    supabase.from('follows').select('*', { count: 'exact', head: true }).eq('follower_id', viewingId),
+    supabase.from('likes').select('recipe_id, recipes(id, title, category, difficulty, time_minutes, cover_emoji)').eq('user_id', viewingId)
   ])
 
   // 프로필 헤더 업데이트
@@ -334,8 +340,54 @@ async function loadProfile() {
   const likedRecipes = likes?.map(l => l.recipes).filter(Boolean) || []
   renderLikedRecipes(likedRecipes)
 
-  // 활동 탭 렌더
-  loadActivity()
+  // 본인/타인 프로필에 따라 버튼 전환
+  if (!isOwnProfile) {
+    document.getElementById('edit-profile-btn').style.display = 'none'
+    document.getElementById('signout-profile-btn').style.display = 'none'
+    const followBtn = document.getElementById('follow-profile-btn')
+    followBtn.style.display = 'inline-block'
+
+    // 이미 팔로우 중인지 확인
+    const { data: existing } = await supabase.from('follows')
+      .select('id').eq('follower_id', user.id).eq('following_id', viewingId).single()
+    if (existing) {
+      followBtn.textContent = 'Following'
+      followBtn.classList.add('following')
+    }
+
+    // Activity 탭 숨김 (남의 활동은 비공개)
+    const activityTab = [...document.querySelectorAll('.tab')].find(t => t.textContent.trim() === 'Activity')
+    if (activityTab) activityTab.style.display = 'none'
+  } else {
+    // 본인 프로필일 때만 활동 탭 렌더
+    loadActivity()
+  }
+}
+
+// ── 다른 유저 팔로우/언팔로우 ──
+window.toggleProfileFollow = async function() {
+  if (!user) { location.href = 'simmers-auth.html'; return }
+  const btn = document.getElementById('follow-profile-btn')
+  const isFollowing = btn.classList.contains('following')
+  btn.classList.toggle('following')
+  btn.textContent = isFollowing ? 'Follow' : 'Following'
+
+  // 팔로워 수 즉시 업데이트
+  const followerEl = document.querySelectorAll('.pstat-val')[1]
+  followerEl.textContent = Math.max(0, parseInt(followerEl.textContent) + (isFollowing ? -1 : 1))
+
+  if (isFollowing) {
+    await supabase.from('follows').delete()
+      .eq('follower_id', user.id).eq('following_id', viewingId)
+  } else {
+    await supabase.from('follows').insert({ follower_id: user.id, following_id: viewingId })
+    const { data: me } = await supabase.from('profiles').select('username').eq('id', user.id).single()
+    await supabase.from('notifications').insert({
+      user_id: viewingId, actor_id: user.id, type: 'follow',
+      message: `<strong>${me?.username || 'Someone'}</strong> started following you`,
+      is_read: false
+    })
+  }
 }
 
 // ── 활동(Activity) 탭 — 받은 알림 표시 ──
@@ -421,16 +473,18 @@ function renderRecipes(recipes) {
     if (likeEl) likeEl.textContent = `♥ ${count || 0}`
   })
 
-  // 새 레시피 추가 버튼
-  const addCardEl = document.createElement('div')
-  addCardEl.className = 'recipe-card'
-  addCardEl.style.borderStyle = 'dashed'
-  addCardEl.style.cursor = 'pointer'
-  addCardEl.onclick = () => location.href = 'simmers-recipe.html'
-  addCardEl.innerHTML = `
-    <div class="recipe-thumb" style="background:var(--surface);font-size:32px;">+</div>
-    <div class="recipe-body"><div class="recipe-name" style="color:var(--muted);">Add new recipe</div></div>`
-  grid.appendChild(addCardEl)
+  // 새 레시피 추가 버튼 (본인 프로필만)
+  if (isOwnProfile) {
+    const addCardEl = document.createElement('div')
+    addCardEl.className = 'recipe-card'
+    addCardEl.style.borderStyle = 'dashed'
+    addCardEl.style.cursor = 'pointer'
+    addCardEl.onclick = () => location.href = 'simmers-recipe.html'
+    addCardEl.innerHTML = `
+      <div class="recipe-thumb" style="background:var(--surface);font-size:32px;">+</div>
+      <div class="recipe-body"><div class="recipe-name" style="color:var(--muted);">Add new recipe</div></div>`
+    grid.appendChild(addCardEl)
+  }
 }
 
 function renderLikedRecipes(recipes) {
