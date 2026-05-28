@@ -425,6 +425,7 @@ document.addEventListener('click', e => {
 
 // ── 현재 유저 ──
 const { data: { user } } = await supabase.auth.getUser()
+let myFollows = new Set()
 
 // 우측 사이드바 미니 프로필 업데이트
 if (user) {
@@ -505,7 +506,6 @@ async function loadRecipes() {
 
   // 현재 유저의 좋아요/팔로우 목록
   let myLikes = new Set()
-  let myFollows = new Set()
   if (user) {
     const [{ data: likes }, { data: follows }] = await Promise.all([
       supabase.from('likes').select('recipe_id').eq('user_id', user.id),
@@ -523,6 +523,14 @@ async function loadRecipes() {
     .in('recipe_id', recipeIds)
   const likeMap = {}
   likeCounts?.forEach(l => { likeMap[l.recipe_id] = (likeMap[l.recipe_id] || 0) + 1 })
+
+  // 각 레시피의 댓글 수
+  const { data: commentCounts } = await supabase
+    .from('comments')
+    .select('recipe_id')
+    .in('recipe_id', recipeIds)
+  const commentMap = {}
+  commentCounts?.forEach(c => { commentMap[c.recipe_id] = (commentMap[c.recipe_id] || 0) + 1 })
 
   const feed = document.querySelector('.feed-main')
   document.querySelectorAll('.recipe-card').forEach(c => c.remove())
@@ -550,6 +558,7 @@ async function loadRecipes() {
     const ac = avatarColors[i % avatarColors.length]
     const grad = gradients[i % gradients.length]
     const likeCount = likeMap[r.id] || 0
+    const commentCount = commentMap[r.id] || 0
     const liked = myLikes.has(r.id)
     const isFollowing = myFollows.has(r.profiles?.id)
     const timeAgo = getTimeAgo(r.created_at)
@@ -583,7 +592,7 @@ async function loadRecipes() {
             <span class="action-icon">${liked ? '♥' : '♡'}</span> ${likeCount}
           </button>
           <button class="action-btn" onclick="location.href='simmers-recipe.html?id=${r.id}'">
-            <span class="action-icon">💬</span> 댓글
+            <span class="action-icon">💬</span> ${commentCount}
           </button>
           <button class="action-btn"><span class="action-icon">↗</span> Share</button>
         </div>
@@ -784,8 +793,17 @@ async function loadSidebar() {
   }
 }
 
-loadSidebar()
-loadRecipes()
+// 팔로우 목록 먼저 로드 후 사이드바/레시피 렌더
+async function init() {
+  if (user) {
+    const { data: follows } = await supabase
+      .from('follows').select('following_id').eq('follower_id', user.id)
+    follows?.forEach(f => myFollows.add(f.following_id))
+  }
+  loadSidebar()
+  loadRecipes()
+}
+init()
 </script>
 
 <nav class="mobile-nav">
