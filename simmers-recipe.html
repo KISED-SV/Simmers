@@ -353,6 +353,7 @@ body{background:var(--surface);color:var(--dark);font-family:'DM Sans',sans-seri
           <div class="author-time" id="author-time"></div>
         </div>
         <button class="detail-follow" id="detail-follow-btn" onclick="toggleFollow(this)">Follow</button>
+        <button class="detail-follow" id="edit-btn" onclick="editRecipe()" style="display:none;">Edit</button>
         <button class="detail-follow" id="delete-btn" onclick="deleteRecipe()" style="display:none;border-color:#F7C1C1;color:#A32D2D;">Delete</button>
       </div>
 
@@ -467,6 +468,7 @@ const { data: { user } } = await supabase.auth.getUser()
 // URL 파라미터에서 레시피 ID 추출
 const params = new URLSearchParams(location.search)
 const recipeId = params.get('id')
+let editingRecipeId = null
 
 // ── 레시피 상세 불러오기 (id 파라미터 있을 때) ──
 window.loadRecipeDetail = async function() {
@@ -501,6 +503,7 @@ window.loadRecipeDetail = async function() {
   // 본인 레시피면 삭제 버튼 표시, 팔로우 버튼 숨김
   if (user && authorId === user.id) {
     document.getElementById('delete-btn').style.display = 'inline-block'
+    document.getElementById('edit-btn').style.display = 'inline-block'
     document.getElementById('detail-follow-btn').style.display = 'none'
   }
 
@@ -579,6 +582,70 @@ window.loadRecipeDetail = async function() {
 
   // 댓글 불러오기
   loadComments()
+}
+
+// ── 레시피 수정 모드 진입 ──
+window.editRecipe = async function() {
+  if (!user || !recipeId) return
+
+  const { data: r } = await supabase.from('recipes').select('*').eq('id', recipeId).single()
+  if (!r) return
+
+  editingRecipeId = recipeId
+
+  // Write 모드로 전환
+  setMode('write', document.querySelectorAll('.mode-btn')[0])
+
+  // 폼 채우기
+  document.getElementById('w-title').value = r.title || ''
+  syncTitle(r.title || '')
+
+  // 카테고리
+  const catSelect = document.querySelector('.form-select')
+  if (catSelect && r.category) {
+    [...catSelect.options].forEach(o => { if (o.value === r.category || o.text === r.category) catSelect.value = o.value })
+  }
+  // 난이도
+  const diffSelect = document.querySelectorAll('.form-select')[1]
+  if (diffSelect && r.difficulty) {
+    [...diffSelect.options].forEach(o => { if (o.value === r.difficulty || o.text === r.difficulty) diffSelect.value = o.value })
+  }
+  // 시간
+  const timeInput = document.querySelector('.form-input-sm')
+  if (timeInput) timeInput.value = r.time_minutes || ''
+
+  // 재료 채우기
+  const ingrList = document.getElementById('ingr-list')
+  ingrList.innerHTML = ''
+  ;(r.ingredients || []).forEach(ing => {
+    const row = document.createElement('div'); row.className = 'ingr-row'
+    row.innerHTML = `<input class="ingr-amount" value="" placeholder="amount" /><select class="ingr-unit"><option>g</option><option>ml</option><option>tbsp</option><option>tsp</option><option>cup</option><option>pcs</option></select><input class="ingr-name" value="${ing.replace(/"/g,'&quot;')}" /><button class="del-btn" onclick="delRow(this)">×</button>`
+    ingrList.appendChild(row)
+  })
+  if ((r.ingredients || []).length === 0) addIngredient()
+
+  // 스텝 채우기
+  const stepsList = document.getElementById('steps-list')
+  stepsList.innerHTML = ''
+  ;(r.steps || []).forEach((s, i) => {
+    const row = document.createElement('div'); row.className = 'step-row'
+    row.innerHTML = `<div class="step-num-badge">${i+1}</div><textarea class="step-textarea">${s.replace(/</g,'&lt;')}</textarea><button class="del-btn" onclick="delRow(this);renumber()" style="margin-top:8px;">×</button>`
+    stepsList.appendChild(row)
+  })
+  if ((r.steps || []).length === 0) addStep()
+
+  // 태그 선택 반영
+  const recipeTags = r.tags || []
+  document.querySelectorAll('.tag-chip').forEach(chip => {
+    if (recipeTags.includes(chip.textContent)) chip.classList.add('sel')
+    else chip.classList.remove('sel')
+  })
+
+  // Publish 버튼 텍스트 변경
+  const pubBtn = document.querySelector('.publish-row .pub-primary[onclick*="publishRecipe"]')
+  if (pubBtn) pubBtn.textContent = 'Update'
+
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 // ── 레시피 삭제 ──
@@ -781,6 +848,24 @@ window.publishRecipe = async function() {
     }
     const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(path)
     cover_url = publicUrl
+  }
+
+  // 수정 모드일 때는 업데이트
+  if (editingRecipeId) {
+    const updateData = {
+      title, category, difficulty,
+      time_minutes: timeMinutes,
+      ingredients, steps, tags, cover_emoji
+    }
+    if (cover_url) updateData.cover_url = cover_url // 새 이미지 올렸을 때만 교체
+
+    const { error } = await supabase.from('recipes')
+      .update(updateData).eq('id', editingRecipeId).eq('user_id', user.id)
+
+    if (error) { alert('수정 실패: ' + error.message); return }
+    alert('레시피가 수정됐어요! ✨')
+    location.href = `simmers-recipe.html?id=${editingRecipeId}`
+    return
   }
 
   const { data, error } = await supabase.from('recipes').insert({
