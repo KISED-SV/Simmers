@@ -396,6 +396,7 @@ async function loadCooks() {
       const card = document.createElement('div')
       card.className = 'cook-card'
       card.dataset.userId = p.id
+      card.onclick = () => location.href = `simmers-profile.html?id=${p.id}`
       const avatarHtml = p.avatar_url
         ? `<img src="${p.avatar_url}" style="width:52px;height:52px;border-radius:50%;object-fit:cover;margin:0 auto 10px;display:block;" />`
         : `<div class="cook-avatar" style="background:${ac.bg};color:${ac.color};">${initials}</div>`
@@ -403,7 +404,7 @@ async function loadCooks() {
         ${avatarHtml}
         <div class="cook-name">${p.username}</div>
         <div class="cook-sub">${followerCount} followers</div>
-        <button class="cook-follow ${isFollowing ? 'following' : ''}" onclick="toggleFollow(this)">${isFollowing ? 'Following' : 'Follow'}</button>`
+        <button class="cook-follow ${isFollowing ? 'following' : ''}" onclick="event.stopPropagation();toggleFollow(this)">${isFollowing ? 'Following' : 'Follow'}</button>`
       grid.appendChild(card)
     })
 }

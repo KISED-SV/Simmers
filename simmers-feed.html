@@ -776,13 +776,13 @@ async function loadSidebar() {
       cooksList.innerHTML = suggested.map((p, i) => {
         const ac = avatarColors[i % avatarColors.length]
         const avatarHtml = p.avatar_url
-          ? `<img src="${p.avatar_url}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;" />`
-          : `<div class="suggest-avatar" style="background:${ac.bg};color:${ac.color};">${(p.username||'U').slice(0,2).toUpperCase()}</div>`
+          ? `<img src="${p.avatar_url}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;cursor:pointer;" onclick="location.href='simmers-profile.html?id=${p.id}'" />`
+          : `<div class="suggest-avatar" style="background:${ac.bg};color:${ac.color};cursor:pointer;" onclick="location.href='simmers-profile.html?id=${p.id}'">${(p.username||'U').slice(0,2).toUpperCase()}</div>`
         return `
           <div class="suggest-item" data-user-id="${p.id}">
             ${avatarHtml}
             <div>
-              <div class="suggest-name">${p.username}</div>
+              <div class="suggest-name" style="cursor:pointer;" onclick="location.href='simmers-profile.html?id=${p.id}'">${p.username}</div>
             </div>
             <button class="suggest-follow" onclick="toggleFollow(this)">${myFollows?.has(p.id) ? 'Following' : 'Follow'}</button>
           </div>`
