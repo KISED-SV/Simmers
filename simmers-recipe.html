@@ -758,6 +758,14 @@ window.publishRecipe = async function() {
   const steps = [...document.querySelectorAll('.step-textarea')].map(t => t.value.trim()).filter(Boolean)
   const tags = [...document.querySelectorAll('.tag-chip.sel')].map(t => t.textContent)
 
+  // 카테고리별 기본 이모지
+  const categoryEmoji = {
+    Italian: '🍝', Korean: '🍚', Japanese: '🍣', Chinese: '🥢', Mexican: '🌮',
+    Indian: '🍛', American: '🍔', French: '🥐', Thai: '🍜', Mediterranean: '🥙',
+    Fusion: '🍲', Dessert: '🍰', Healthy: '🥗', Vegan: '🥦', Other: '🍽️'
+  }
+  const cover_emoji = categoryEmoji[category] || '🍽️'
+
   // 커버 이미지 업로드
   let cover_url = null
   const fileInput = document.getElementById('cover-file-input')
@@ -784,7 +792,8 @@ window.publishRecipe = async function() {
     ingredients,
     steps,
     tags,
-    cover_url
+    cover_url,
+    cover_emoji
   }).select().single()
 
   if (error) { alert('저장 실패: ' + error.message); return }
