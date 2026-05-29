@@ -379,7 +379,7 @@
       <a href="simmers-auth.html" class="btn-primary">Get started</a>
       <a href="simmers-ai-tools-LIVE.html" class="btn-secondary">Try AI tools</a>
     </div>
-    <div class="hero-cards">
+    <div class="hero-cards" id="hero-cards">
       <div class="recipe-chip">
         <span class="chip-emoji">🍜</span>
         <div>
@@ -494,6 +494,38 @@
     });
   }, { threshold: 0.12 });
   reveals.forEach(el => observer.observe(el));
+</script>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+const supabase = createClient(
+  'https://ifsaasfsapbkufvgjyzs.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlmc2Fhc2ZzYXBia3VmdmdqeXpzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNzQxNjAsImV4cCI6MjA4OTk1MDE2MH0.CGyqmFhq0KVwISbcJnF-R1Vvh1knBOa24OG6Pt-HAKI'
+)
+
+// 랜딩 페이지 히어로 카드 — 실제 최신 레시피 3개
+async function loadHeroRecipes() {
+  const { data: recipes } = await supabase
+    .from('recipes')
+    .select('title, time_minutes, difficulty, cover_emoji')
+    .order('created_at', { ascending: false })
+    .limit(3)
+
+  // 레시피가 3개 미만이면 기존 예시 유지
+  if (!recipes || recipes.length < 3) return
+
+  const container = document.getElementById('hero-cards')
+  container.innerHTML = recipes.map(r => `
+    <div class="recipe-chip">
+      <span class="chip-emoji">${r.cover_emoji || '🍽️'}</span>
+      <div>
+        <div class="chip-name">${r.title}</div>
+        <div class="chip-meta">${r.time_minutes ? r.time_minutes + ' min' : ''}${r.difficulty ? ' · ' + r.difficulty : ''}</div>
+      </div>
+    </div>`).join('')
+}
+
+loadHeroRecipes()
 </script>
 </body>
 </html>
