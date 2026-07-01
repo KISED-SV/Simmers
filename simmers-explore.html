@@ -132,9 +132,26 @@ body{background:var(--surface);color:var(--dark);font-family:'DM Sans',sans-seri
   .cat-pill{font-size:12px;padding:6px 12px;}
   .page-title{font-size:22px;}
 }
+
+/* 모바일 상단 헤더 */
+.mobile-header{display:none;position:fixed;top:0;left:0;right:0;background:var(--white);border-bottom:1px solid var(--border);padding:12px 16px;z-index:290;align-items:center;justify-content:space-between;}
+.mobile-header-logo{font-family:'Fraunces',serif;font-size:20px;font-weight:700;color:var(--dark);text-decoration:none;}
+.mobile-header-logo span{color:var(--flame);}
+.mobile-header-bell{position:relative;border:none;background:none;font-size:20px;cursor:pointer;padding:4px 6px;}
+.notif-badge-m{display:none;position:absolute;top:2px;right:2px;width:9px;height:9px;border-radius:50%;background:var(--flame);}
+.notif-badge-m.show{display:block;}
+@media(max-width:768px){
+  .mobile-header{display:flex;}
+  body{padding-top:56px;}
+}
 </style>
 </head>
 <body>
+<header class="mobile-header">
+  <a class="mobile-header-logo" href="simmers-feed.html">Simmer<span>s</span></a>
+  <button class="mobile-header-bell" onclick="toggleNotifPanel(this)">🔔<span class="notif-badge-m" id="notif-badge-m"></span></button>
+</header>
+
 <div class="layout">
   <aside class="sidebar">
     <a class="logo" href="simmers-feed.html" style="text-decoration:none;color:inherit;">Simmer<span>s</span></a>
@@ -451,21 +468,26 @@ window.toggleFollow = async function(btn) {
 }
 
 // ── 알림 시스템 ──
-window.toggleNotifPanel = function() {
+window.toggleNotifPanel = function(srcBtn) {
   const panel = document.getElementById('notif-panel')
-  const btn = document.querySelector('.notif-btn')
+  if (panel.parentElement !== document.body) document.body.appendChild(panel)
+  const btn = srcBtn || document.querySelector('.notif-btn')
   panel.classList.toggle('open')
   if (panel.classList.contains('open')) {
-    // 버튼 위치 기준으로 패널 위치 계산
     const rect = btn.getBoundingClientRect()
-    panel.style.top = rect.top + 'px'
-    panel.style.right = (window.innerWidth - rect.left + 8) + 'px'
+    panel.style.right = 'auto'
+    let left = rect.right + 12
+    if (left + 320 > window.innerWidth) left = Math.max(8, Math.min(rect.left - 332, window.innerWidth - 328))
+    panel.style.left = left + 'px'
+    let top = rect.bottom + 8
+    if (top + 440 > window.innerHeight) top = Math.max(8, window.innerHeight - 460)
+    panel.style.top = top + 'px'
     loadNotifications()
   }
 }
 document.addEventListener('click', e => {
-  const wrap = document.querySelector('.notif-wrap')
-  if (wrap && !wrap.contains(e.target)) document.getElementById('notif-panel')?.classList.remove('open')
+  if (e.target.closest('.notif-btn') || e.target.closest('.mobile-header-bell') || e.target.closest('#notif-panel')) return
+  document.getElementById('notif-panel')?.classList.remove('open')
 })
 const typeIcon = { like:'♥', comment:'💬', follow:'👤', save:'🔖' }
 const typeColor = { like:'#EEEDFE', comment:'#FAECE7', follow:'#E1F5EE', save:'#FAEEDA' }
@@ -486,7 +508,7 @@ window.loadNotifications = async function() {
     return
   }
   const unreadCount = notifs.filter(n => !n.is_read).length
-  if (unreadCount > 0) { badge.textContent = unreadCount > 9 ? '9+' : unreadCount; badge.classList.add('show') }
+  if (unreadCount > 0) { badge.textContent = unreadCount > 9 ? '9+' : unreadCount; badge.classList.add('show'); document.getElementById('notif-badge-m')?.classList.add('show') }
   list.innerHTML = ''
   notifs.forEach(n => {
     const actor = n.actor?.username || 'Someone'
@@ -524,8 +546,8 @@ window.markAllRead = async function() {
 function updateBadge() {
   const unread = document.querySelectorAll('.notif-item.unread').length
   const badge = document.getElementById('notif-badge')
-  if (unread > 0) { badge.textContent = unread > 9 ? '9+' : unread; badge.classList.add('show') }
-  else badge.classList.remove('show')
+  if (unread > 0) { badge.textContent = unread > 9 ? '9+' : unread; badge.classList.add('show'); document.getElementById('notif-badge-m')?.classList.add('show') }
+  else { badge.classList.remove('show'); document.getElementById('notif-badge-m')?.classList.remove('show') }
 }
 function getTimeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime()
