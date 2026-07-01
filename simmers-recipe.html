@@ -421,7 +421,7 @@ function toggleImage() {} // legacy, kept for compatibility
 function handleCoverUpload(e) {
   const file = e.target.files[0]
   if (!file) return
-  if (file.size > 10 * 1024 * 1024) { alert('이미지는 10MB 이하만 가능해요.'); return }
+  if (file.size > 10 * 1024 * 1024) { alert('Image must be under 10MB.'); return }
   const zone = document.getElementById('upload-zone')
   const reader = new FileReader()
   reader.onload = (ev) => {
@@ -654,7 +654,7 @@ window.editRecipe = async function() {
 // ── 레시피 삭제 ──
 window.deleteRecipe = async function() {
   if (!user || !recipeId) return
-  if (!confirm('이 레시피를 삭제할까요? 되돌릴 수 없어요.')) return
+  if (!confirm('Delete this recipe? This cannot be undone.')) return
 
   const btn = document.getElementById('delete-btn')
   btn.textContent = 'Deleting...'
@@ -671,13 +671,13 @@ window.deleteRecipe = async function() {
   const { error } = await supabase.from('recipes').delete().eq('id', recipeId).eq('user_id', user.id)
 
   if (error) {
-    alert('삭제 실패: ' + error.message)
+    alert('Failed to delete: ' + error.message)
     btn.textContent = 'Delete'
     btn.disabled = false
     return
   }
 
-  alert('레시피가 삭제됐어요.')
+  alert('Recipe deleted.')
   location.href = 'simmers-profile.html'
 }
 
@@ -812,7 +812,7 @@ window.postComment = async function() {
 window.publishRecipe = async function() {
   if (!user) { location.href = 'simmers-auth.html'; return }
   const title = document.getElementById('w-title').value.trim()
-  if (!title) { alert('레시피 제목을 입력해주세요!'); return }
+  if (!title) { alert('Please enter a recipe title!'); return }
 
   const category = document.querySelector('.form-select')?.value
   const difficulty = document.querySelectorAll('.form-select')[1]?.value
@@ -847,7 +847,7 @@ window.publishRecipe = async function() {
       .from('images')
       .upload(path, file, { upsert: true })
     if (uploadError) {
-      alert('이미지 업로드 실패: ' + uploadError.message); return
+      alert('Image upload failed: ' + uploadError.message); return
     }
     const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(path)
     cover_url = publicUrl
@@ -865,8 +865,8 @@ window.publishRecipe = async function() {
     const { error } = await supabase.from('recipes')
       .update(updateData).eq('id', editingRecipeId).eq('user_id', user.id)
 
-    if (error) { alert('수정 실패: ' + error.message); return }
-    alert('레시피가 수정됐어요! ✨')
+    if (error) { alert('Failed to update: ' + error.message); return }
+    alert('Recipe updated! ✨')
     location.href = `simmers-recipe.html?id=${editingRecipeId}`
     return
   }
@@ -884,8 +884,8 @@ window.publishRecipe = async function() {
     cover_emoji
   }).select().single()
 
-  if (error) { alert('저장 실패: ' + error.message); return }
-  alert('레시피가 게시됐어요! 🎉')
+  if (error) { alert('Failed to post: ' + error.message); return }
+  alert('Recipe posted! 🎉')
   location.href = 'simmers-feed.html'
 }
 
@@ -904,10 +904,17 @@ window.toggleNotifPanel = function() {
   const btn = document.querySelector('.notif-btn')
   panel.classList.toggle('open')
   if (panel.classList.contains('open')) {
-    // 버튼 위치 기준으로 패널 위치 계산
     const rect = btn.getBoundingClientRect()
-    panel.style.top = rect.top + 'px'
-    panel.style.right = (window.innerWidth - rect.left + 8) + 'px'
+    panel.style.right = 'auto'
+    // 기본: 버튼 오른쪽에 표시
+    let left = rect.right + 12
+    // 오른쪽 공간이 부족하면 버튼 왼쪽에
+    if (left + 320 > window.innerWidth) left = Math.max(8, rect.left - 332)
+    panel.style.left = left + 'px'
+    // 세로 위치: 화면 아래로 넘치지 않게
+    let top = rect.top
+    if (top + 440 > window.innerHeight) top = Math.max(8, window.innerHeight - 460)
+    panel.style.top = top + 'px'
     loadNotifications()
   }
 }
