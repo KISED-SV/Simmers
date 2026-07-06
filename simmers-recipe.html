@@ -716,6 +716,17 @@ window.toggleLike = async function(btn) {
     await supabase.from('likes').delete().eq('user_id', user.id).eq('recipe_id', recipeId)
   } else {
     await supabase.from('likes').insert({ user_id: user.id, recipe_id: recipeId })
+    // 레시피 작성자에게 알림 (본인 제외)
+    const { data: recipe } = await supabase.from('recipes').select('user_id').eq('id', recipeId).single()
+    if (recipe && recipe.user_id !== user.id) {
+      const { data: me } = await supabase.from('profiles').select('username').eq('id', user.id).single()
+      await supabase.from('notifications').insert({
+        user_id: recipe.user_id, actor_id: user.id, type: 'like',
+        recipe_id: recipeId,
+        message: `<strong>${me?.username || 'Someone'}</strong> liked your recipe`,
+        is_read: false
+      })
+    }
   }
 }
 
@@ -733,7 +744,7 @@ window.toggleSave = async function(btn) {
     // 레시피 작성자에게 알림
     const { data: recipe } = await supabase.from('recipes').select('user_id').eq('id', recipeId).single()
     const { data: me } = await supabase.from('profiles').select('username').eq('id', user.id).single()
-    if (recipe) await supabase.from('notifications').insert({
+    if (recipe && recipe.user_id !== user.id) await supabase.from('notifications').insert({
       user_id: recipe.user_id, actor_id: user.id, type: 'save',
       recipe_id: recipeId,
       message: `<strong>${me?.username || 'Someone'}</strong> saved your recipe`,
@@ -797,7 +808,7 @@ window.postComment = async function() {
 
   // 레시피 작성자에게 알림
   const { data: recipe } = await supabase.from('recipes').select('user_id').eq('id', recipeId).single()
-  if (recipe) await supabase.from('notifications').insert({
+  if (recipe && recipe.user_id !== user.id) await supabase.from('notifications').insert({
     user_id: recipe.user_id, actor_id: user.id, type: 'comment',
     recipe_id: recipeId,
     message: `<strong>${profile?.username || 'Someone'}</strong> commented on your recipe`,
