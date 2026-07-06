@@ -103,6 +103,7 @@ body{background:var(--surface);color:var(--dark);font-family:'DM Sans',sans-seri
 .tag-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px;}
 .tag-chip{font-size:11px;padding:5px 12px;border-radius:100px;border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:all .15s;background:var(--surface);}
 .tag-chip:hover,.tag-chip.sel{background:var(--cream);border-color:var(--peach);color:var(--flame);}
+.tag-chip.custom-tag::after{content:' ×';opacity:.55;}
 
 .publish-row{display:flex;gap:10px;margin-top:24px;}
 .pub-btn{flex:1;padding:13px;border-radius:12px;font-size:14px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;}
@@ -166,6 +167,9 @@ body{background:var(--surface);color:var(--dark);font-family:'DM Sans',sans-seri
 .comment-body{flex:1;}
 .comment-name{font-size:13px;font-weight:500;color:var(--dark);}
 .comment-time{font-size:11px;color:var(--muted);margin-left:6px;}
+.comment-actions{font-size:11px;color:var(--muted);margin-left:8px;}
+.comment-actions span{cursor:pointer;}
+.comment-actions span:hover{color:var(--flame);text-decoration:underline;}
 .comment-text{font-size:13px;color:var(--mid);line-height:1.6;margin-top:2px;}
 
 @media(max-width:900px){.layout{grid-template-columns:1fr;}.sidebar{display:none;}.main{padding:20px;}.form-grid{grid-template-columns:1fr 1fr;}.stat-row{grid-template-columns:1fr 1fr;}.ingr-grid{grid-template-columns:1fr;}}
@@ -336,15 +340,22 @@ body{background:var(--surface);color:var(--dark);font-family:'DM Sans',sans-seri
       <div class="section-title-row" style="margin-top:20px;">
         <div class="section-title">Tags</div>
       </div>
-      <div class="tag-row">
-        <span class="tag-chip sel" onclick="toggleTag(this)">Quick</span>
+      <div class="tag-row" id="tag-row">
+        <span class="tag-chip" onclick="toggleTag(this)">Quick</span>
         <span class="tag-chip" onclick="toggleTag(this)">Vegetarian</span>
         <span class="tag-chip" onclick="toggleTag(this)">Vegan</span>
-        <span class="tag-chip sel" onclick="toggleTag(this)">Weeknight</span>
+        <span class="tag-chip" onclick="toggleTag(this)">Weeknight</span>
         <span class="tag-chip" onclick="toggleTag(this)">Meal Prep</span>
         <span class="tag-chip" onclick="toggleTag(this)">Budget</span>
         <span class="tag-chip" onclick="toggleTag(this)">Spicy</span>
         <span class="tag-chip" onclick="toggleTag(this)">Kid-friendly</span>
+      </div>
+      <div style="display:flex;gap:8px;margin:-8px 0 20px;">
+        <input id="custom-tag-input" placeholder="Add your own tag" maxlength="20"
+          style="flex:1;max-width:220px;padding:8px 14px;border:1.5px solid var(--border);border-radius:100px;font-size:12px;color:var(--dark);background:var(--surface);font-family:'DM Sans',sans-serif;outline:none;"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();addCustomTag()}" />
+        <button onclick="addCustomTag()"
+          style="padding:8px 16px;border-radius:100px;border:1px solid var(--border);background:var(--white);color:var(--mid);font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;">+ Add</button>
       </div>
 
       <div class="publish-row">
@@ -469,6 +480,26 @@ function renumber() {
   document.querySelectorAll('.step-num-badge').forEach((b, i) => b.textContent = i + 1)
 }
 function toggleTag(el) { el.classList.toggle('sel') }
+
+function addCustomTag(name) {
+  const input = document.getElementById('custom-tag-input')
+  const tag = (typeof name === 'string' ? name : input.value).trim()
+  if (!tag) return
+  // 이미 있는 태그면 선택만
+  const existing = [...document.querySelectorAll('.tag-chip')].find(c => c.textContent.trim().toLowerCase() === tag.toLowerCase())
+  if (existing) {
+    existing.classList.add('sel')
+    if (typeof name !== 'string') input.value = ''
+    return
+  }
+  const chip = document.createElement('span')
+  chip.className = 'tag-chip sel custom-tag'
+  chip.textContent = tag
+  chip.title = 'Click to remove'
+  chip.onclick = () => chip.remove()
+  document.getElementById('tag-row').appendChild(chip)
+  if (typeof name !== 'string') input.value = ''
+}
 function toggleFollow(btn) {
   const f = btn.classList.toggle('followed')
   btn.textContent = f ? 'Following' : 'Follow'
@@ -656,10 +687,14 @@ window.editRecipe = async function() {
 
   // 태그 선택 반영
   const recipeTags = r.tags || []
+  document.querySelectorAll('.tag-chip.custom-tag').forEach(c => c.remove())
   document.querySelectorAll('.tag-chip').forEach(chip => {
     if (recipeTags.includes(chip.textContent)) chip.classList.add('sel')
     else chip.classList.remove('sel')
   })
+  // 프리셋에 없는 태그는 커스텀 칩으로 복원
+  const presetNames = [...document.querySelectorAll('.tag-chip')].map(c => c.textContent)
+  recipeTags.filter(t => !presetNames.includes(t)).forEach(t => addCustomTag(t))
 
   // Publish 버튼 텍스트 변경
   const pubBtn = document.querySelector('.publish-row .pub-primary[onclick*="publishRecipe"]')
@@ -774,18 +809,84 @@ async function loadComments() {
   comments?.forEach((c, i) => {
     const ai = i % 4
     const username = c.profiles?.username || 'unknown'
-    const initials = username.slice(0,2).toUpperCase()
     const timeAgo = getTimeAgo(c.created_at)
-    const el = document.createElement('div')
-    el.className = 'comment'
-    el.innerHTML = `
-      <div class="comment-avatar" style="background:${avatarColors[ai]};color:${textColors[ai]};">${initials}</div>
-      <div class="comment-body">
-        <div><span class="comment-name">${username}</span><span class="comment-time">${timeAgo}</span></div>
-        <div class="comment-text">${c.content}</div>
-      </div>`
-    list.appendChild(el)
+    list.appendChild(renderCommentEl(c, username, timeAgo, avatarColors[ai], textColors[ai]))
   })
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+}
+
+function renderCommentEl(c, username, timeAgo, avatarBg, avatarColor) {
+  const mine = user && c.user_id === user.id
+  const el = document.createElement('div')
+  el.className = 'comment'
+  el.dataset.id = c.id || ''
+  el.innerHTML = `
+    <div class="comment-avatar" style="background:${avatarBg};color:${avatarColor};">${username.slice(0,2).toUpperCase()}</div>
+    <div class="comment-body">
+      <div><span class="comment-name">${username}</span><span class="comment-time">${timeAgo}</span>${mine ? '<span class="comment-actions"><span onclick="editComment(this)">Edit</span> · <span onclick="deleteComment(this)">Delete</span></span>' : ''}</div>
+      <div class="comment-text">${escapeHtml(c.content)}</div>
+    </div>`
+  return el
+}
+
+// ── 댓글 삭제 ──
+window.deleteComment = async function(btn) {
+  if (!confirm('Delete this comment?')) return
+  const el = btn.closest('.comment')
+  const id = el.dataset.id
+  if (!id) { el.remove(); return }
+  const { error } = await supabase.from('comments').delete().eq('id', id).eq('user_id', user.id)
+  if (error) { alert('Failed to delete: ' + error.message); return }
+  el.remove()
+  const countBtn = document.getElementById('comment-count-btn')
+  if (countBtn) {
+    const current = parseInt(countBtn.textContent.trim().split(/\s+/).pop()) || 0
+    countBtn.innerHTML = `<span>💬</span> ${Math.max(0, current - 1)}`
+  }
+}
+
+// ── 댓글 수정 ──
+window.editComment = function(btn) {
+  const el = btn.closest('.comment')
+  if (el.querySelector('.comment-edit-box')) return
+  const textDiv = el.querySelector('.comment-text')
+  const current = textDiv.textContent
+  textDiv.style.display = 'none'
+  const box = document.createElement('div')
+  box.className = 'comment-edit-box'
+  box.innerHTML = `
+    <textarea style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:10px;font-size:13px;color:var(--dark);background:var(--surface);font-family:'DM Sans',sans-serif;resize:vertical;min-height:56px;outline:none;">${escapeHtml(current)}</textarea>
+    <div style="display:flex;gap:8px;margin-top:6px;">
+      <button onclick="saveComment(this)" style="padding:6px 14px;border-radius:100px;border:none;background:var(--flame);color:#fff;font-size:12px;font-weight:500;cursor:pointer;font-family:'DM Sans',sans-serif;">Save</button>
+      <button onclick="cancelEditComment(this)" style="padding:6px 14px;border-radius:100px;border:1px solid var(--border);background:var(--white);color:var(--muted);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;">Cancel</button>
+    </div>`
+  textDiv.after(box)
+  box.querySelector('textarea').focus()
+}
+
+window.cancelEditComment = function(btn) {
+  const el = btn.closest('.comment')
+  el.querySelector('.comment-edit-box')?.remove()
+  el.querySelector('.comment-text').style.display = ''
+}
+
+window.saveComment = async function(btn) {
+  const el = btn.closest('.comment')
+  const id = el.dataset.id
+  const ta = el.querySelector('.comment-edit-box textarea')
+  const content = ta.value.trim()
+  if (!content) return
+  btn.textContent = 'Saving...'
+  btn.disabled = true
+  const { error } = await supabase.from('comments').update({ content }).eq('id', id).eq('user_id', user.id)
+  if (error) { alert('Failed to update: ' + error.message); btn.textContent = 'Save'; btn.disabled = false; return }
+  const textDiv = el.querySelector('.comment-text')
+  textDiv.textContent = content
+  el.querySelector('.comment-edit-box').remove()
+  textDiv.style.display = ''
 }
 
 // ── 댓글 작성 ──
@@ -799,11 +900,11 @@ window.postComment = async function() {
   const { data: profile } = await supabase
     .from('profiles').select('username').eq('id', user.id).single()
 
-  const { error } = await supabase.from('comments').insert({
+  const { data: newComment, error } = await supabase.from('comments').insert({
     user_id: user.id,
     recipe_id: recipeId,
     content
-  })
+  }).select().single()
   if (error) return
 
   // 레시피 작성자에게 알림
@@ -817,14 +918,8 @@ window.postComment = async function() {
 
   // 낙관적 UI
   const list = document.getElementById('comments-list')
-  const el = document.createElement('div'); el.className = 'comment'
   const username = profile?.username || 'me'
-  el.innerHTML = `
-    <div class="comment-avatar" style="background:var(--cream);color:var(--flame);">${username.slice(0,2).toUpperCase()}</div>
-    <div class="comment-body">
-      <div><span class="comment-name">${username}</span><span class="comment-time">just now</span></div>
-      <div class="comment-text">${content}</div>
-    </div>`
+  const el = renderCommentEl({ id: newComment?.id, user_id: user.id, content }, username, 'just now', 'var(--cream)', 'var(--flame)')
   list.prepend(el)
   input.value = ''
 
